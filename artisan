@@ -1,0 +1,19 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
+ *
+ * This is the entry point for the Artisan command-line interface of the 
+ * Mini LMS application. It bootstraps the Laravel application and handles
+ * incoming console commands using Symfony's console component.
+ */
+
+define('LARAVEL_START', microtime(true));
+
+require __DIR__.'/vendor/autoload.php';
+
+$status = (require_once __DIR__.'/bootstrap/app.php')
+    ->handleCommand(new Symfony\Component\Console\Input\ArgvInput);
+
+exit($status);

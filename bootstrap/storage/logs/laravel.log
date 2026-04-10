@@ -1,0 +1,482 @@
+[2026-04-04 15:26:57] production.ERROR: The /home/LTH/Stage/mini-lms/v2/mini-lms/bootstrap/cache directory must be present and writable. {"exception":"[object] (Exception(code: 0): The /home/LTH/Stage/mini-lms/v2/mini-lms/bootstrap/cache directory must be present and writable. at /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/PackageManifest.php:179)
+[stacktrace]
+#0 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/PackageManifest.php(132): Illuminate\\Foundation\\PackageManifest->write()
+#1 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/PackageManifest.php(108): Illuminate\\Foundation\\PackageManifest->build()
+#2 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/PackageManifest.php(91): Illuminate\\Foundation\\PackageManifest->getManifest()
+#3 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/PackageManifest.php(80): Illuminate\\Foundation\\PackageManifest->config()
+#4 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/RegisterFacades.php(26): Illuminate\\Foundation\\PackageManifest->aliases()
+#5 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(342): Illuminate\\Foundation\\Bootstrap\\RegisterFacades->bootstrap()
+#6 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(474): Illuminate\\Foundation\\Application->bootstrapWith()
+#7 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(196): Illuminate\\Foundation\\Console\\Kernel->bootstrap()
+#8 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle()
+#9 /home/LTH/Stage/mini-lms/v2/mini-lms/artisan(9): Illuminate\\Foundation\\Application->handleCommand()
+#10 {main}
+"} 
+[2026-04-04 15:55:22] local.ERROR: Gemini API failed after retries {"error":null} 
+[2026-04-04 19:31:07] local.INFO: Gemini: trying model 'gemini-1.5-flash'  
+[2026-04-04 19:31:07] local.WARNING: Gemini API error {"model":"gemini-1.5-flash","status":404,"error":"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.","attempt":1} 
+[2026-04-04 19:31:07] local.WARNING: Gemini: model 'gemini-1.5-flash' not found, trying next...  
+[2026-04-04 19:31:07] local.INFO: Gemini: trying model 'gemini-2.0-flash'  
+[2026-04-04 19:31:07] local.WARNING: Gemini API error {"model":"gemini-2.0-flash","status":429,"error":"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+Please retry in 52.192654973s.","attempt":1} 
+[2026-04-04 19:31:09] local.WARNING: Gemini API error {"model":"gemini-2.0-flash","status":429,"error":"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+Please retry in 49.945914215s.","attempt":2} 
+[2026-04-04 19:31:14] local.WARNING: Gemini API error {"model":"gemini-2.0-flash","status":429,"error":"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+Please retry in 45.668328153s.","attempt":3} 
+[2026-04-04 19:31:14] local.ERROR: Gemini exhausted retries {"model":"gemini-2.0-flash","error":"Limite de requêtes Gemini atteinte. Réessayez dans quelques secondes.","last_body":"{
+  \"error\": {
+    \"code\": 429,
+    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_con"} 
+[2026-04-04 19:36:10] local.INFO: Gemini: trying model 'gemini-1.5-flash'  
+[2026-04-04 19:36:10] local.WARNING: Gemini API error {"model":"gemini-1.5-flash","status":404,"error":"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.","attempt":1} 
+[2026-04-04 19:36:10] local.WARNING: Gemini: model 'gemini-1.5-flash' not found, trying next...  
+[2026-04-04 19:36:10] local.INFO: Gemini: trying model 'gemini-2.0-flash'  
+[2026-04-04 19:36:10] local.WARNING: Gemini API error {"model":"gemini-2.0-flash","status":429,"error":"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+Please retry in 48.772658256s.","attempt":1} 
+[2026-04-04 19:36:13] local.WARNING: Gemini API error {"model":"gemini-2.0-flash","status":429,"error":"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+Please retry in 46.452316002s.","attempt":2} 
+[2026-04-04 19:36:17] local.WARNING: Gemini API error {"model":"gemini-2.0-flash","status":429,"error":"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+Please retry in 42.157492614s.","attempt":3} 
+[2026-04-04 19:36:17] local.ERROR: Gemini exhausted retries {"model":"gemini-2.0-flash","error":"Limite de requêtes Gemini atteinte. Réessayez dans quelques secondes.","last_body":"{
+  \"error\": {
+    \"code\": 429,
+    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash\\n* Quota exceeded for metric: generativelanguage.googleapis.com/gen"} 
+[2026-04-04 19:51:54] local.INFO: Gemini: trying model 'gemini-flash-latest'  
+[2026-04-04 19:51:54] local.INFO: Gemini request {"model":"gemini-flash-latest","attempt":1,"prompt_preview":"explain for me programming in C in simple terms with examples"} 
+[2026-04-04 19:52:24] local.WARNING: Gemini error {"model":"gemini-flash-latest","status":503,"error":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.","attempt":1} 
+[2026-04-04 19:52:26] local.INFO: Gemini request {"model":"gemini-flash-latest","attempt":2,"prompt_preview":"explain for me programming in C in simple terms with examples"} 
+[2026-04-04 19:52:47] local.WARNING: Gemini error {"model":"gemini-flash-latest","status":503,"error":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.","attempt":2} 
+[2026-04-04 19:52:51] local.INFO: Gemini request {"model":"gemini-flash-latest","attempt":3,"prompt_preview":"explain for me programming in C in simple terms with examples"} 
+[2026-04-04 19:53:18] local.INFO: Gemini success {"model":"gemini-3-flash-preview","response_length":2774,"tokens":1494} 
+[2026-04-04 19:57:43] local.INFO: Gemini: trying model 'gemini-flash-latest'  
+[2026-04-04 19:57:43] local.INFO: Gemini request {"model":"gemini-flash-latest","attempt":1,"prompt_preview":"explain to me how does raylib work in C with simple examples , practical"} 
+[2026-04-04 19:58:03] local.INFO: Gemini success {"model":"gemini-3-flash-preview","response_length":3586,"tokens":1594} 
+[2026-04-04 21:14:41] local.WARNING: AI content parser: could not extract JSON {"content_preview":"Voici un guide pédagogique structuré pour apprendre à utiliser la bibliothèque **raylib** en langage C.
+
+## Introduction à raylib en C : Créer des jeux simplement
+
+<p><strong>raylib</strong> est"} 
+[2026-04-04 22:10:26] local.WARNING: AI content parser: could not extract JSON {"content_preview":"Voici un guide pédagogique structuré pour apprendre à utiliser la bibliothèque **raylib** en langage C.
+
+## Introduction à raylib en C : Créer des jeux simplement
+
+<p><strong>raylib</strong> est"} 
+[2026-04-05 01:00:08] local.WARNING: AI content parser: could not extract JSON {"content_preview":"Voici un guide pédagogique structuré pour apprendre à utiliser la bibliothèque **raylib** en langage C.
+
+## Introduction à raylib en C : Créer des jeux simplement
+
+<p><strong>raylib</strong> est"} 
+[2026-04-05 01:00:21] local.ERROR: SQLSTATE[23000]: Integrity constraint violation: 19 CHECK constraint failed: status (Connection: sqlite, SQL: update "ai_generations" set "status" = validated, "validated_at" = 2026-04-05 01:00:21, "updated_at" = 2026-04-05 01:00:21 where "id" = 2) {"userId":2,"exception":"[object] (Illuminate\\Database\\QueryException(code: 23000): SQLSTATE[23000]: Integrity constraint violation: 19 CHECK constraint failed: status (Connection: sqlite, SQL: update \"ai_generations\" set \"status\" = validated, \"validated_at\" = 2026-04-05 01:00:21, \"updated_at\" = 2026-04-05 01:00:21 where \"id\" = 2) at /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Connection.php:825)
+[stacktrace]
+#0 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Connection.php(779): Illuminate\\Database\\Connection->runQueryCallback()
+#1 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Connection.php(584): Illuminate\\Database\\Connection->run()
+#2 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Connection.php(536): Illuminate\\Database\\Connection->affectingStatement()
+#3 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3830): Illuminate\\Database\\Connection->update()
+#4 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(1175): Illuminate\\Database\\Query\\Builder->update()
+#5 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1239): Illuminate\\Database\\Eloquent\\Builder->update()
+#6 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1156): Illuminate\\Database\\Eloquent\\Model->performUpdate()
+#7 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1014): Illuminate\\Database\\Eloquent\\Model->save()
+#8 /home/LTH/Stage/mini-lms/v2/mini-lms/app/Http/Controllers/Student/AIController.php(159): Illuminate\\Database\\Eloquent\\Model->update()
+#9 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php(32): App\\Http\\Controllers\\Student\\AIController->{closure:App\\Http\\Controllers\\Student\\AIController::validate():158}()
+#10 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php(495): Illuminate\\Database\\Connection->transaction()
+#11 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(361): Illuminate\\Database\\DatabaseManager->__call()
+#12 /home/LTH/Stage/mini-lms/v2/mini-lms/app/Http/Controllers/Student/AIController.php(158): Illuminate\\Support\\Facades\\Facade::__callStatic()
+#13 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php(47): App\\Http\\Controllers\\Student\\AIController->validate()
+#14 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/Route.php(266): Illuminate\\Routing\\ControllerDispatcher->dispatch()
+#15 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/Route.php(212): Illuminate\\Routing\\Route->runController()
+#16 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/Router.php(808): Illuminate\\Routing\\Route->run()
+#17 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate\\Routing\\Router->{closure:Illuminate\\Routing\\Router::runRouteWithinStack():807}()
+#18 /home/LTH/Stage/mini-lms/v2/mini-lms/app/Http/Middleware/RoleMiddleware.php(22): Illuminate\\Pipeline\\Pipeline->{closure:Illuminate\\Pipeline\\Pipeline::prepareDestination():168}()
+#19 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): App\\Http\\Middleware\\RoleMiddleware->handle()
+#20 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(51): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#21 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Routing\\Middleware\\SubstituteBindings->handle()
+#22 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(64): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#23 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Auth\\Middleware\\Authenticate->handle()
+#24 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(88): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#25 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\VerifyCsrfToken->handle()
+#26 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(49): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#27 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\View\\Middleware\\ShareErrorsFromSession->handle()
+#28 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(121): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#29 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(64): Illuminate\\Session\\Middleware\\StartSession->handleStatefulRequest()
+#30 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Session\\Middleware\\StartSession->handle()
+#31 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(37): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#32 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse->handle()
+#33 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(75): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#34 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Cookie\\Middleware\\EncryptCookies->handle()
+#35 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#36 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/Router.php(807): Illuminate\\Pipeline\\Pipeline->then()
+#37 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/Router.php(786): Illuminate\\Routing\\Router->runRouteWithinStack()
+#38 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/Router.php(750): Illuminate\\Routing\\Router->runRoute()
+#39 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/Router.php(739): Illuminate\\Routing\\Router->dispatchToRoute()
+#40 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(201): Illuminate\\Routing\\Router->dispatch()
+#41 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate\\Foundation\\Http\\Kernel->{closure:Illuminate\\Foundation\\Http\\Kernel::dispatchToRouter():198}()
+#42 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->{closure:Illuminate\\Pipeline\\Pipeline::prepareDestination():168}()
+#43 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle()
+#44 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull->handle()
+#45 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#46 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle()
+#47 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\TrimStrings->handle()
+#48 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#49 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\ValidatePostSize->handle()
+#50 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(110): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#51 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance->handle()
+#52 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(49): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#53 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\HandleCors->handle()
+#54 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#55 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\TrustProxies->handle()
+#56 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#57 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks->handle()
+#58 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#59 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(176): Illuminate\\Pipeline\\Pipeline->then()
+#60 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(145): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter()
+#61 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1220): Illuminate\\Foundation\\Http\\Kernel->handle()
+#62 /home/LTH/Stage/mini-lms/v2/mini-lms/public/index.php(17): Illuminate\\Foundation\\Application->handleRequest()
+#63 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('...')
+#64 {main}
+
+[previous exception] [object] (PDOException(code: 23000): SQLSTATE[23000]: Integrity constraint violation: 19 CHECK constraint failed: status at /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Connection.php:596)
+[stacktrace]
+#0 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Connection.php(596): PDOStatement->execute()
+#1 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Connection.php(812): Illuminate\\Database\\Connection->{closure:Illuminate\\Database\\Connection::affectingStatement():584}()
+#2 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Connection.php(779): Illuminate\\Database\\Connection->runQueryCallback()
+#3 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Connection.php(584): Illuminate\\Database\\Connection->run()
+#4 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Connection.php(536): Illuminate\\Database\\Connection->affectingStatement()
+#5 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3830): Illuminate\\Database\\Connection->update()
+#6 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(1175): Illuminate\\Database\\Query\\Builder->update()
+#7 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1239): Illuminate\\Database\\Eloquent\\Builder->update()
+#8 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1156): Illuminate\\Database\\Eloquent\\Model->performUpdate()
+#9 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1014): Illuminate\\Database\\Eloquent\\Model->save()
+#10 /home/LTH/Stage/mini-lms/v2/mini-lms/app/Http/Controllers/Student/AIController.php(159): Illuminate\\Database\\Eloquent\\Model->update()
+#11 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php(32): App\\Http\\Controllers\\Student\\AIController->{closure:App\\Http\\Controllers\\Student\\AIController::validate():158}()
+#12 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php(495): Illuminate\\Database\\Connection->transaction()
+#13 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(361): Illuminate\\Database\\DatabaseManager->__call()
+#14 /home/LTH/Stage/mini-lms/v2/mini-lms/app/Http/Controllers/Student/AIController.php(158): Illuminate\\Support\\Facades\\Facade::__callStatic()
+#15 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php(47): App\\Http\\Controllers\\Student\\AIController->validate()
+#16 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/Route.php(266): Illuminate\\Routing\\ControllerDispatcher->dispatch()
+#17 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/Route.php(212): Illuminate\\Routing\\Route->runController()
+#18 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/Router.php(808): Illuminate\\Routing\\Route->run()
+#19 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate\\Routing\\Router->{closure:Illuminate\\Routing\\Router::runRouteWithinStack():807}()
+#20 /home/LTH/Stage/mini-lms/v2/mini-lms/app/Http/Middleware/RoleMiddleware.php(22): Illuminate\\Pipeline\\Pipeline->{closure:Illuminate\\Pipeline\\Pipeline::prepareDestination():168}()
+#21 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): App\\Http\\Middleware\\RoleMiddleware->handle()
+#22 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(51): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#23 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Routing\\Middleware\\SubstituteBindings->handle()
+#24 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(64): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#25 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Auth\\Middleware\\Authenticate->handle()
+#26 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(88): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#27 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\VerifyCsrfToken->handle()
+#28 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(49): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#29 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\View\\Middleware\\ShareErrorsFromSession->handle()
+#30 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(121): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#31 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(64): Illuminate\\Session\\Middleware\\StartSession->handleStatefulRequest()
+#32 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Session\\Middleware\\StartSession->handle()
+#33 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(37): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#34 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse->handle()
+#35 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(75): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#36 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Cookie\\Middleware\\EncryptCookies->handle()
+#37 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#38 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/Router.php(807): Illuminate\\Pipeline\\Pipeline->then()
+#39 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/Router.php(786): Illuminate\\Routing\\Router->runRouteWithinStack()
+#40 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/Router.php(750): Illuminate\\Routing\\Router->runRoute()
+#41 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Routing/Router.php(739): Illuminate\\Routing\\Router->dispatchToRoute()
+#42 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(201): Illuminate\\Routing\\Router->dispatch()
+#43 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate\\Foundation\\Http\\Kernel->{closure:Illuminate\\Foundation\\Http\\Kernel::dispatchToRouter():198}()
+#44 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->{closure:Illuminate\\Pipeline\\Pipeline::prepareDestination():168}()
+#45 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle()
+#46 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull->handle()
+#47 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#48 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle()
+#49 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\TrimStrings->handle()
+#50 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#51 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\ValidatePostSize->handle()
+#52 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(110): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#53 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance->handle()
+#54 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(49): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#55 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\HandleCors->handle()
+#56 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#57 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\TrustProxies->handle()
+#58 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#59 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks->handle()
+#60 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}()
+#61 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(176): Illuminate\\Pipeline\\Pipeline->then()
+#62 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(145): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter()
+#63 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1220): Illuminate\\Foundation\\Http\\Kernel->handle()
+#64 /home/LTH/Stage/mini-lms/v2/mini-lms/public/index.php(17): Illuminate\\Foundation\\Application->handleRequest()
+#65 /home/LTH/Stage/mini-lms/v2/mini-lms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('...')
+#66 {main}
+"} 
+[2026-04-08 01:08:13] local.INFO: Importing formation 'Maîtriser les Piles (Stacks) en Programmation' with 4 chapters  
+[2026-04-08 01:08:13] local.INFO: Wikimedia API returned 403 for 'Introduction aux Piles et le Concept LIFO education overview'  
+[2026-04-08 01:08:14] local.INFO: Image found for 'Introduction aux Piles et le Concept LIFO education overview': https://images.pexels.com/photos/159866/books-book-pages-read-literature-159866.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:08:14] local.INFO: Sources found: 0 for keywords [Stack data structure, LIFO principle, Computer Science]  
+[2026-04-08 01:08:15] local.INFO: Wikimedia API returned 403 for 'stack data structure lifo diagram'  
+[2026-04-08 01:08:15] local.INFO: Image found for 'stack data structure lifo diagram': https://images.pexels.com/photos/25626448/pexels-photo-25626448.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:08:16] local.INFO: Sources found: 0 for keywords [Stack data structure, LIFO principle, Computer Science]  
+[2026-04-08 01:08:16] local.INFO: Wikimedia API returned 403 for 'stack pointer memory diagram'  
+[2026-04-08 01:08:17] local.INFO: Image found for 'stack pointer memory diagram': https://images.pexels.com/photos/20031379/pexels-photo-20031379.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:08:17] local.INFO: Sources found: 0 for keywords [Stack pointer, Memory management, Stack overflow]  
+[2026-04-08 01:08:17] local.INFO: Quiz created: 'Quiz : Fondamentaux des Piles' with 5 questions  
+[2026-04-08 01:08:18] local.INFO: Wikimedia API returned 403 for 'Implémentation des Piles education overview'  
+[2026-04-08 01:08:18] local.INFO: Image found for 'Implémentation des Piles education overview': https://images.pexels.com/photos/289738/pexels-photo-289738.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:08:19] local.INFO: Sources found: 0 for keywords [Array implementation, Static memory, Data structures]  
+[2026-04-08 01:08:19] local.INFO: Wikimedia API returned 403 for 'stack implementation using array diagram'  
+[2026-04-08 01:08:20] local.INFO: Image found for 'stack implementation using array diagram': https://images.pexels.com/photos/7948062/pexels-photo-7948062.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:08:20] local.INFO: Sources found: 0 for keywords [Array implementation, Static memory, Data structures]  
+[2026-04-08 01:08:20] local.INFO: Wikimedia API returned 403 for 'stack linked list implementation diagram'  
+[2026-04-08 01:08:21] local.INFO: Image found for 'stack linked list implementation diagram': https://images.pexels.com/photos/25626437/pexels-photo-25626437.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:08:22] local.INFO: Sources found: 0 for keywords [Linked list, Dynamic memory, Node pointers]  
+[2026-04-08 01:08:22] local.INFO: Quiz created: 'Quiz : Implémentation des Piles' with 5 questions  
+[2026-04-08 01:08:22] local.INFO: Wikimedia API returned 403 for 'Algorithmes et Applications des Piles education overview'  
+[2026-04-08 01:08:23] local.INFO: Image found for 'Algorithmes et Applications des Piles education overview': https://images.pexels.com/photos/34803988/pexels-photo-34803988.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:08:23] local.INFO: Sources found: 0 for keywords [Reverse Polish Notation, Shunting-yard algorithm, Expression evaluation]  
+[2026-04-08 01:08:23] local.INFO: Wikimedia API returned 403 for 'shunting yard algorithm stack diagram'  
+[2026-04-08 01:08:24] local.INFO: Image found for 'shunting yard algorithm stack diagram': https://images.pexels.com/photos/25626437/pexels-photo-25626437.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:08:25] local.INFO: Sources found: 0 for keywords [Reverse Polish Notation, Shunting-yard algorithm, Expression evaluation]  
+[2026-04-08 01:08:25] local.INFO: Wikimedia API returned 403 for 'recursion call stack frames diagram'  
+[2026-04-08 01:08:25] local.INFO: Image found for 'recursion call stack frames diagram': https://images.pexels.com/photos/12891175/pexels-photo-12891175.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:08:26] local.INFO: Sources found: 0 for keywords [Call stack, Recursion, Stack trace]  
+[2026-04-08 01:08:26] local.INFO: Quiz created: 'Quiz : Applications des Piles' with 5 questions  
+[2026-04-08 01:08:26] local.INFO: Wikimedia API returned 403 for 'Concepts Avancés et Mémoire education overview'  
+[2026-04-08 01:08:27] local.INFO: Image found for 'Concepts Avancés et Mémoire education overview': https://images.pexels.com/photos/31905853/pexels-photo-31905853.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:08:27] local.INFO: Sources found: 0 for keywords [Stack vs Heap, Memory management, Process memory layout]  
+[2026-04-08 01:08:27] local.INFO: Wikimedia API returned 403 for 'stack vs heap memory allocation diagram'  
+[2026-04-08 01:08:28] local.INFO: Image found for 'stack vs heap memory allocation diagram': https://images.pexels.com/photos/35147150/pexels-photo-35147150.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:08:29] local.INFO: Sources found: 0 for keywords [Stack vs Heap, Memory management, Process memory layout]  
+[2026-04-08 01:08:29] local.INFO: Wikimedia API returned 403 for 'stack buffer overflow exploit diagram'  
+[2026-04-08 01:08:30] local.INFO: Image found for 'stack buffer overflow exploit diagram': https://images.pexels.com/photos/25626437/pexels-photo-25626437.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:08:30] local.INFO: Sources found: 0 for keywords [Buffer overflow, Stack canary, Computer security]  
+[2026-04-08 01:08:30] local.INFO: Quiz created: 'Quiz : Concepts Avancés' with 5 questions  
+[2026-04-08 01:08:30] local.INFO: Formation 'Maîtriser les Piles (Stacks) en Programmation' imported successfully (ID: 5)  
+[2026-04-08 01:23:50] local.INFO: Importing formation 'Understanding CFS Bandwidth Control in the Linux Kernel' with 3 chapters  
+[2026-04-08 01:23:50] local.INFO: Wikimedia API returned 403 for 'Fundamentals of CFS Bandwidth Control education overview'  
+[2026-04-08 01:23:51] local.INFO: Image found for 'Fundamentals of CFS Bandwidth Control education overview': https://images.pexels.com/photos/11022652/pexels-photo-11022652.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:23:51] local.INFO: Sources found: 0 for keywords [Linux Kernel, CFS Bandwidth Control, cgroups]  
+[2026-04-08 01:23:52] local.INFO: Wikimedia API returned 403 for 'linux kernel cfs bandwidth diagram'  
+[2026-04-08 01:23:52] local.INFO: Image found for 'linux kernel cfs bandwidth diagram': https://images.pexels.com/photos/4339335/pexels-photo-4339335.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:23:53] local.INFO: Sources found: 0 for keywords [Linux Kernel, CFS Bandwidth Control, cgroups]  
+[2026-04-08 01:23:53] local.INFO: Wikimedia API returned 403 for 'cpu throttling mechanism visualization'  
+[2026-04-08 01:23:54] local.INFO: Image found for 'cpu throttling mechanism visualization': https://images.pexels.com/photos/1432675/pexels-photo-1432675.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:23:54] local.INFO: Sources found: 0 for keywords [Kernel Throttling, CPU Runqueues, Scheduler]  
+[2026-04-08 01:23:54] local.INFO: Quiz created: 'Quiz: CFS Fundamentals' with 5 questions  
+[2026-04-08 01:23:54] local.INFO: Wikimedia API returned 403 for 'Management, Statistics, and Hierarchy education overview'  
+[2026-04-08 01:23:55] local.INFO: Image found for 'Management, Statistics, and Hierarchy education overview': https://images.pexels.com/photos/8463140/pexels-photo-8463140.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:23:56] local.INFO: Sources found: 0 for keywords [cgroupfs, Linux Management, System Tuning]  
+[2026-04-08 01:23:56] local.INFO: Wikimedia API returned 403 for 'linux cgroupfs directory structure'  
+[2026-04-08 01:23:56] local.INFO: Image found for 'linux cgroupfs directory structure': https://images.pexels.com/photos/207580/pexels-photo-207580.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:23:57] local.INFO: Sources found: 0 for keywords [cgroupfs, Linux Management, System Tuning]  
+[2026-04-08 01:23:57] local.INFO: Wikimedia API returned 403 for 'hierarchical resource management diagram'  
+[2026-04-08 01:23:58] local.INFO: Image found for 'hierarchical resource management diagram': https://images.pexels.com/photos/9034966/pexels-photo-9034966.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:23:59] local.INFO: Sources found: 0 for keywords [Hierarchical Scheduling, cpu.stat, Kernel Monitoring]  
+[2026-04-08 01:23:59] local.INFO: Quiz created: 'Quiz: Management and Monitoring' with 5 questions  
+[2026-04-08 01:23:59] local.INFO: Wikimedia API returned 403 for 'Advanced Implementation and Caveats education overview'  
+[2026-04-08 01:23:59] local.INFO: Image found for 'Advanced Implementation and Caveats education overview': https://images.pexels.com/photos/6549915/pexels-photo-6549915.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:24:00] local.INFO: Sources found: 0 for keywords [Lock Contention, Distributed Systems, Kernel Optimization]  
+[2026-04-08 01:24:00] local.INFO: Wikimedia API returned 403 for 'global pool local silo architecture'  
+[2026-04-08 01:24:01] local.INFO: Image found for 'global pool local silo architecture': https://images.pexels.com/photos/35296871/pexels-photo-35296871.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:24:01] local.INFO: Sources found: 0 for keywords [Lock Contention, Distributed Systems, Kernel Optimization]  
+[2026-04-08 01:24:02] local.INFO: Wikimedia API returned 403 for 'cpu burst behavior graph'  
+[2026-04-08 01:24:02] local.INFO: Image found for 'cpu burst behavior graph': https://images.pexels.com/photos/1010487/pexels-photo-1010487.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-08 01:24:03] local.INFO: Sources found: 0 for keywords [Bursting, Multi-threading, Linux Scheduler Caveats]  
+[2026-04-08 01:24:03] local.INFO: Quiz created: 'Quiz: Advanced Implementation' with 5 questions  
+[2026-04-08 01:24:03] local.INFO: Formation 'Understanding CFS Bandwidth Control in the Linux Kernel' imported successfully (ID: 6)  
+[2026-04-09 18:22:48] local.INFO: Importing formation 'Comprehensive Database Systems Mastery' with 5 chapters  
+[2026-04-09 18:22:50] local.INFO: Wikimedia API returned 403 for 'Introduction to Databases and Data Modeling education overview'  
+[2026-04-09 18:22:51] local.INFO: Image found for 'Introduction to Databases and Data Modeling education overview': https://images.pexels.com/photos/30965505/pexels-photo-30965505.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:22:52] local.INFO: Sources found: 3 for keywords [DBMS, Data Management, Database Architecture, ER Model]  
+[2026-04-09 18:22:52] local.INFO: Wikimedia API returned 403 for 'database management system architecture diagram'  
+[2026-04-09 18:22:53] local.INFO: Image found for 'database management system architecture diagram': https://images.pexels.com/photos/17489160/pexels-photo-17489160.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:22:54] local.INFO: Sources found: 3 for keywords [DBMS, Data Management, Database Architecture]  
+[2026-04-09 18:22:54] local.INFO: Wikimedia API returned 403 for 'entity relationship diagram notation schema'  
+[2026-04-09 18:22:54] local.INFO: Image found for 'entity relationship diagram notation schema': https://images.pexels.com/photos/8533026/pexels-photo-8533026.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:22:55] local.INFO: Sources found: 2 for keywords [ER Model, Entity Relationship Diagram, Database Design]  
+[2026-04-09 18:22:55] local.INFO: Wikimedia API returned 403 for 'three schema database architecture diagram'  
+[2026-04-09 18:22:56] local.INFO: Image found for 'three schema database architecture diagram': https://images.pexels.com/photos/6937932/pexels-photo-6937932.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:22:57] local.INFO: Sources found: 2 for keywords [Database Architecture, Three-Schema, Client-Server]  
+[2026-04-09 18:22:57] local.INFO: Quiz created: 'Quiz: Introduction to Databases' with 5 questions  
+[2026-04-09 18:22:57] local.INFO: Wikimedia API returned 403 for 'Relational Database Management Systems (RDBMS) and SQL education overview'  
+[2026-04-09 18:22:58] local.INFO: Image found for 'Relational Database Management Systems (RDBMS) and SQL education overview': https://images.pexels.com/photos/1148820/pexels-photo-1148820.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:22:59] local.INFO: Sources found: 3 for keywords [Relational Model, Primary Key, Foreign Key, SQL]  
+[2026-04-09 18:22:59] local.INFO: Wikimedia API returned 403 for 'relational database table keys diagram'  
+[2026-04-09 18:23:00] local.INFO: Image found for 'relational database table keys diagram': https://images.pexels.com/photos/35785012/pexels-photo-35785012.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:23:01] local.INFO: Sources found: 2 for keywords [Relational Model, Primary Key, Foreign Key]  
+[2026-04-09 18:23:01] local.INFO: Wikimedia API returned 403 for 'sql ddl dml dcl commands infographic'  
+[2026-04-09 18:23:02] local.INFO: Image found for 'sql ddl dml dcl commands infographic': https://images.pexels.com/photos/1102797/pexels-photo-1102797.png?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:23:03] local.INFO: Sources found: 4 for keywords [SQL, DDL, DML, Database Queries]  
+[2026-04-09 18:23:03] local.INFO: Wikimedia API returned 403 for 'sql joins types venn diagram'  
+[2026-04-09 18:23:03] local.INFO: Image found for 'sql joins types venn diagram': https://images.pexels.com/photos/7948104/pexels-photo-7948104.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:23:05] local.INFO: Sources found: 3 for keywords [SQL JOIN, Inner Join, Left Join, Relational Algebra]  
+[2026-04-09 18:23:05] local.INFO: Quiz created: 'Quiz: RDBMS and SQL' with 5 questions  
+[2026-04-09 18:23:05] local.INFO: Wikimedia API returned 403 for 'Database Design and Normalization education overview'  
+[2026-04-09 18:23:06] local.INFO: Image found for 'Database Design and Normalization education overview': https://images.pexels.com/photos/30965505/pexels-photo-30965505.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:23:07] local.INFO: Sources found: 2 for keywords [Normalization, 1NF 2NF 3NF, Database Integrity, Referential Integrity]  
+[2026-04-09 18:23:07] local.INFO: Wikimedia API returned 403 for 'database normalization 1nf 2nf 3nf diagram'  
+[2026-04-09 18:23:08] local.INFO: Image found for 'database normalization 1nf 2nf 3nf diagram': https://images.pexels.com/photos/25626435/pexels-photo-25626435.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:23:09] local.INFO: Sources found: 2 for keywords [Normalization, 1NF 2NF 3NF, Database Integrity]  
+[2026-04-09 18:23:09] local.INFO: Wikimedia API returned 403 for 'database integrity constraints types schema'  
+[2026-04-09 18:23:11] local.INFO: Image found for 'database integrity constraints types schema': https://images.pexels.com/photos/30885765/pexels-photo-30885765.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:23:12] local.INFO: Sources found: 2 for keywords [Referential Integrity, Entity Integrity, Database Constraints]  
+[2026-04-09 18:23:12] local.INFO: Quiz created: 'Quiz: Design and Normalization' with 5 questions  
+[2026-04-09 18:23:12] local.INFO: Wikimedia API returned 403 for 'NoSQL Databases and Distributed Systems education overview'  
+[2026-04-09 18:23:13] local.INFO: Image found for 'NoSQL Databases and Distributed Systems education overview': https://images.pexels.com/photos/17489160/pexels-photo-17489160.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:23:14] local.INFO: Sources found: 4 for keywords [NoSQL, CAP Theorem, Horizontal Scaling, MongoDB]  
+[2026-04-09 18:23:14] local.INFO: Wikimedia API returned 403 for 'cap theorem distributed systems diagram'  
+[2026-04-09 18:23:14] local.INFO: Image found for 'cap theorem distributed systems diagram': https://images.pexels.com/photos/8369597/pexels-photo-8369597.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:23:15] local.INFO: Sources found: 3 for keywords [NoSQL, CAP Theorem, Horizontal Scaling]  
+[2026-04-09 18:23:16] local.INFO: Wikimedia API returned 403 for 'document vs key-value database diagram'  
+[2026-04-09 18:23:16] local.INFO: Image found for 'document vs key-value database diagram': https://images.pexels.com/photos/6937932/pexels-photo-6937932.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:23:17] local.INFO: Sources found: 4 for keywords [MongoDB, Redis, Document Store]  
+[2026-04-09 18:23:17] local.INFO: Wikimedia API returned 403 for 'graph database vs relational diagram'  
+[2026-04-09 18:23:18] local.INFO: Image found for 'graph database vs relational diagram': https://images.pexels.com/photos/6937932/pexels-photo-6937932.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:23:18] local.INFO: Sources found: 2 for keywords [Graph Database, Cassandra, Neo4j]  
+[2026-04-09 18:23:18] local.INFO: Quiz created: 'Quiz: NoSQL Databases' with 5 questions  
+[2026-04-09 18:23:18] local.INFO: Wikimedia API returned 403 for 'Database Administration, Security, and Performance education overview'  
+[2026-04-09 18:23:19] local.INFO: Image found for 'Database Administration, Security, and Performance education overview': https://images.pexels.com/photos/6466141/pexels-photo-6466141.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:23:20] local.INFO: Sources found: 2 for keywords [Database Indexing, B-Tree, Query Optimization, ACID Properties]  
+[2026-04-09 18:23:20] local.INFO: Wikimedia API returned 403 for 'b-tree database index structure diagram'  
+[2026-04-09 18:23:20] local.INFO: Image found for 'b-tree database index structure diagram': https://images.pexels.com/photos/6549358/pexels-photo-6549358.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:23:21] local.INFO: Sources found: 2 for keywords [Database Indexing, B-Tree, Query Optimization]  
+[2026-04-09 18:23:22] local.INFO: Wikimedia API returned 403 for 'acid properties database transaction diagram'  
+[2026-04-09 18:23:22] local.INFO: Image found for 'acid properties database transaction diagram': https://images.pexels.com/photos/32045967/pexels-photo-32045967.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:23:23] local.INFO: Sources found: 2 for keywords [ACID Properties, Database Transactions, Concurrency Control]  
+[2026-04-09 18:23:23] local.INFO: Wikimedia API returned 403 for 'database security layers infographic'  
+[2026-04-09 18:23:24] local.INFO: Image found for 'database security layers infographic': https://images.pexels.com/photos/5380664/pexels-photo-5380664.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-09 18:23:25] local.INFO: Sources found: 3 for keywords [Database Security, SQL Injection, Backup and Recovery]  
+[2026-04-09 18:23:25] local.INFO: Quiz created: 'Quiz: Admin and Performance' with 5 questions  
+[2026-04-09 18:23:25] local.INFO: Formation 'Comprehensive Database Systems Mastery' imported successfully (ID: 7)  
+[2026-04-10 00:27:59] local.INFO: Importing formation 'The Physics and Engineering of Transistors' with 2 chapters  
+[2026-04-10 00:27:59] local.INFO: Wikimedia API returned 403 for 'Foundations of Semiconductors and Junctions overview diagram'  
+[2026-04-10 00:28:00] local.INFO: Image found for 'Foundations of Semiconductors and Junctions overview diagram': https://images.pexels.com/photos/28136811/pexels-photo-28136811.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:28:00] local.INFO: AI source validated: https://en.wikipedia.org/wiki/Semiconductor  
+[2026-04-10 00:28:00] local.INFO: AI source rejected (unreachable): https://www.britannica.com/science/doping-semiconductor  
+[2026-04-10 00:28:00] local.INFO: AI source rejected (unreachable): https://www.allaboutcircuits.com/textbook/semiconductors/chpt-2/the-p-n-junction/  
+[2026-04-10 00:28:01] local.INFO: AI source validated: https://learn.sparkfun.com/tutorials/diodes/all  
+[2026-04-10 00:28:01] local.INFO: Wikimedia API returned 403 for 'silicon crystal lattice doping process diagram'  
+[2026-04-10 00:28:01] local.INFO: Image found for 'silicon crystal lattice doping process diagram': https://images.pexels.com/photos/28136811/pexels-photo-28136811.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:28:02] local.INFO: AI source validated: https://en.wikipedia.org/wiki/Semiconductor  
+[2026-04-10 00:28:02] local.INFO: AI source rejected (unreachable): https://www.britannica.com/science/doping-semiconductor  
+[2026-04-10 00:28:02] local.INFO: Sources result: 1 sources for 'Semiconductor Physics and the Doping Process'  
+[2026-04-10 00:28:02] local.INFO: Wikimedia API returned 403 for 'pn junction depletion region barrier schema'  
+[2026-04-10 00:28:03] local.INFO: Image found for 'pn junction depletion region barrier schema': https://images.pexels.com/photos/33877383/pexels-photo-33877383.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:28:03] local.INFO: AI source rejected (unreachable): https://www.allaboutcircuits.com/textbook/semiconductors/chpt-2/the-p-n-junction/  
+[2026-04-10 00:28:04] local.INFO: AI source validated: https://learn.sparkfun.com/tutorials/diodes/all  
+[2026-04-10 00:28:04] local.INFO: Sources result: 1 sources for 'The P-N Junction and Depletion Region'  
+[2026-04-10 00:28:04] local.INFO: Quiz: 'Semiconductor Fundamentals Quiz' with 5 questions  
+[2026-04-10 00:28:04] local.INFO: Wikimedia API returned 403 for 'Transistor Operation and Logic overview diagram'  
+[2026-04-10 00:28:05] local.INFO: Image found for 'Transistor Operation and Logic overview diagram': https://images.pexels.com/photos/5023567/pexels-photo-5023567.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:28:10] local.INFO: AI source rejected (unreachable): https://www.electronics-tutorials.ws/transistor/tran_2.html  
+[2026-04-10 00:28:11] local.INFO: AI source rejected (unreachable): https://www.computerhistory.org/siliconengine/the-transistor/  
+[2026-04-10 00:28:11] local.INFO: AI source validated: https://www.explainthatstuff.com/howtransistorswork.html  
+[2026-04-10 00:28:11] local.INFO: AI source validated: https://en.wikipedia.org/wiki/CMOS  
+[2026-04-10 00:28:12] local.INFO: Wikimedia API returned 403 for 'npn transistor current flow diagram schema'  
+[2026-04-10 00:28:12] local.INFO: Image found for 'npn transistor current flow diagram schema': https://images.pexels.com/photos/33779004/pexels-photo-33779004.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:28:17] local.INFO: AI source rejected (unreachable): https://www.electronics-tutorials.ws/transistor/tran_2.html  
+[2026-04-10 00:28:18] local.INFO: AI source rejected (unreachable): https://www.computerhistory.org/siliconengine/the-transistor/  
+[2026-04-10 00:28:19] local.INFO: Sources result: 0 sources for 'Bipolar Junction Transistors (BJT)'  
+[2026-04-10 00:28:19] local.INFO: Wikimedia API returned 403 for 'mosfet structure and channel formation diagram'  
+[2026-04-10 00:28:20] local.INFO: Image found for 'mosfet structure and channel formation diagram': https://images.pexels.com/photos/25626437/pexels-photo-25626437.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:28:20] local.INFO: AI source validated: https://www.explainthatstuff.com/howtransistorswork.html  
+[2026-04-10 00:28:21] local.INFO: AI source validated: https://en.wikipedia.org/wiki/CMOS  
+[2026-04-10 00:28:21] local.INFO: Quiz: 'Transistor Types and Operation Quiz' with 5 questions  
+[2026-04-10 00:28:21] local.INFO: Formation 'The Physics and Engineering of Transistors' imported (ID: 8)  
+[2026-04-10 00:34:04] local.INFO: Importing formation 'Mastering Calculus: From Limits to Multivariable Systems' with 6 chapters  
+[2026-04-10 00:34:05] local.INFO: Wikimedia API returned 403 for 'The Foundation: Limits and Continuity overview diagram'  
+[2026-04-10 00:34:05] local.INFO: Image found for 'The Foundation: Limits and Continuity overview diagram': https://images.pexels.com/photos/7947841/pexels-photo-7947841.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:05] local.INFO: AI source validated: https://www.khanacademy.org/math/calculus-1/cs1-limits-and-continuity  
+[2026-04-10 00:34:05] local.INFO: AI source validated: https://en.wikipedia.org/wiki/Limit_of_a_function  
+[2026-04-10 00:34:08] local.INFO: AI source validated: https://tutorial.math.lamar.edu/Classes/CalcI/Continuity.aspx  
+[2026-04-10 00:34:08] local.INFO: Wikimedia API returned 403 for 'limit of a function graph diagram'  
+[2026-04-10 00:34:08] local.INFO: Image found for 'limit of a function graph diagram': https://images.pexels.com/photos/8482062/pexels-photo-8482062.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:09] local.INFO: AI source validated: https://www.khanacademy.org/math/calculus-1/cs1-limits-and-continuity  
+[2026-04-10 00:34:09] local.INFO: AI source validated: https://en.wikipedia.org/wiki/Limit_of_a_function  
+[2026-04-10 00:34:09] local.INFO: Wikimedia API returned 403 for 'types of discontinuities calculus diagram'  
+[2026-04-10 00:34:10] local.INFO: Image found for 'types of discontinuities calculus diagram': https://images.pexels.com/photos/8482022/pexels-photo-8482022.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:10] local.INFO: AI source validated: https://tutorial.math.lamar.edu/Classes/CalcI/Continuity.aspx  
+[2026-04-10 00:34:11] local.INFO: Sources result: 1 sources for 'Continuity and Its Implications'  
+[2026-04-10 00:34:11] local.INFO: Quiz: 'Limits and Continuity Quiz' with 5 questions  
+[2026-04-10 00:34:11] local.INFO: Wikimedia API returned 403 for 'The Derivative: Measuring Change overview diagram'  
+[2026-04-10 00:34:12] local.INFO: Image found for 'The Derivative: Measuring Change overview diagram': https://images.pexels.com/photos/19607141/pexels-photo-19607141.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:12] local.INFO: AI source validated: https://en.wikipedia.org/wiki/Derivative  
+[2026-04-10 00:34:13] local.INFO: AI source validated: https://tutorial.math.lamar.edu/pdf/Calculus_Cheat_Sheet_All.pdf  
+[2026-04-10 00:34:13] local.INFO: Wikimedia API returned 403 for 'derivative secant to tangent line diagram'  
+[2026-04-10 00:34:14] local.INFO: Image found for 'derivative secant to tangent line diagram': https://images.pexels.com/photos/8482062/pexels-photo-8482062.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:14] local.INFO: AI source validated: https://en.wikipedia.org/wiki/Derivative  
+[2026-04-10 00:34:14] local.INFO: Sources result: 1 sources for 'The Definition of the Derivative'  
+[2026-04-10 00:34:14] local.INFO: Wikimedia API returned 403 for 'calculus differentiation rules schema'  
+[2026-04-10 00:34:15] local.INFO: Image found for 'calculus differentiation rules schema': https://images.pexels.com/photos/6238297/pexels-photo-6238297.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:16] local.INFO: AI source validated: https://tutorial.math.lamar.edu/pdf/Calculus_Cheat_Sheet_All.pdf  
+[2026-04-10 00:34:16] local.INFO: Sources result: 1 sources for 'Rules of Differentiation'  
+[2026-04-10 00:34:16] local.INFO: Quiz: 'Differentiation Quiz' with 5 questions  
+[2026-04-10 00:34:16] local.INFO: Wikimedia API returned 403 for 'Applications of the Derivative overview diagram'  
+[2026-04-10 00:34:17] local.INFO: Image found for 'Applications of the Derivative overview diagram': https://images.pexels.com/photos/7947848/pexels-photo-7947848.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:17] local.INFO: AI source validated: https://www.mathsisfun.com/calculus/maxima-minima.html  
+[2026-04-10 00:34:18] local.INFO: AI source validated: https://tutorial.math.lamar.edu/Classes/CalcI/RelatedRates.aspx  
+[2026-04-10 00:34:18] local.INFO: Wikimedia API returned 403 for 'local maxima and minima calculus diagram'  
+[2026-04-10 00:34:19] local.INFO: Image found for 'local maxima and minima calculus diagram': https://images.pexels.com/photos/8482022/pexels-photo-8482022.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:19] local.INFO: AI source validated: https://www.mathsisfun.com/calculus/maxima-minima.html  
+[2026-04-10 00:34:19] local.INFO: Sources result: 1 sources for 'Optimization and Extrema'  
+[2026-04-10 00:34:19] local.INFO: Wikimedia API returned 403 for 'related rates sphere balloon diagram'  
+[2026-04-10 00:34:20] local.INFO: Image found for 'related rates sphere balloon diagram': https://images.pexels.com/photos/5625127/pexels-photo-5625127.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:21] local.INFO: AI source validated: https://tutorial.math.lamar.edu/Classes/CalcI/RelatedRates.aspx  
+[2026-04-10 00:34:21] local.INFO: Sources result: 1 sources for 'Related Rates'  
+[2026-04-10 00:34:21] local.INFO: Quiz: 'Applications Quiz' with 5 questions  
+[2026-04-10 00:34:21] local.INFO: Wikimedia API returned 403 for 'The Integral: Accumulation and Area overview diagram'  
+[2026-04-10 00:34:22] local.INFO: Image found for 'The Integral: Accumulation and Area overview diagram': https://images.pexels.com/photos/6231/marketing-color-colors-wheel.jpg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:22] local.INFO: AI source validated: https://en.wikipedia.org/wiki/Antiderivative  
+[2026-04-10 00:34:22] local.INFO: AI source validated: https://www.khanacademy.org/math/ap-calculus-ab/ab-integration-new/ab-6-2/a/left-and-right-riemann-sums  
+[2026-04-10 00:34:22] local.INFO: Wikimedia API returned 403 for 'antiderivative family of curves diagram'  
+[2026-04-10 00:34:23] local.INFO: Image found for 'antiderivative family of curves diagram': https://images.pexels.com/photos/8482062/pexels-photo-8482062.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:23] local.INFO: AI source validated: https://en.wikipedia.org/wiki/Antiderivative  
+[2026-04-10 00:34:24] local.INFO: Sources result: 1 sources for 'The Antiderivative'  
+[2026-04-10 00:34:24] local.INFO: Wikimedia API returned 403 for 'riemann sum rectangles diagram'  
+[2026-04-10 00:34:25] local.INFO: Image found for 'riemann sum rectangles diagram': https://images.pexels.com/photos/25626436/pexels-photo-25626436.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:25] local.INFO: AI source validated: https://www.khanacademy.org/math/ap-calculus-ab/ab-integration-new/ab-6-2/a/left-and-right-riemann-sums  
+[2026-04-10 00:34:25] local.INFO: Sources result: 1 sources for 'The Definite Integral and Riemann Sums'  
+[2026-04-10 00:34:26] local.INFO: Wikimedia API returned 403 for 'fundamental theorem of calculus schema'  
+[2026-04-10 00:34:26] local.INFO: Image found for 'fundamental theorem of calculus schema': https://images.pexels.com/photos/4494641/pexels-photo-4494641.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:26] local.INFO: AI source validated: https://en.wikipedia.org/wiki/Fundamental_theorem_of_calculus  
+[2026-04-10 00:34:27] local.INFO: Sources result: 1 sources for 'The Fundamental Theorem of Calculus'  
+[2026-04-10 00:34:27] local.INFO: Quiz: 'Integration Quiz' with 5 questions  
+[2026-04-10 00:34:27] local.INFO: Wikimedia API returned 403 for 'Techniques of Integration overview diagram'  
+[2026-04-10 00:34:27] local.INFO: Image found for 'Techniques of Integration overview diagram': https://images.pexels.com/photos/7947841/pexels-photo-7947841.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:28] local.INFO: AI source validated: https://www.khanacademy.org/math/ap-calculus-ab/ab-integration-new/ab-6-9/a/u-substitution-review  
+[2026-04-10 00:34:28] local.INFO: AI source validated: https://tutorial.math.lamar.edu/Classes/CalcII/IntegrationByParts.aspx  
+[2026-04-10 00:34:29] local.INFO: Wikimedia API returned 403 for 'u-substitution calculus flowchart'  
+[2026-04-10 00:34:29] local.INFO: Image found for 'u-substitution calculus flowchart': https://images.pexels.com/photos/4494641/pexels-photo-4494641.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:29] local.INFO: AI source validated: https://www.khanacademy.org/math/ap-calculus-ab/ab-integration-new/ab-6-9/a/u-substitution-review  
+[2026-04-10 00:34:30] local.INFO: Sources result: 1 sources for 'Integration by Substitution (U-Substitution)'  
+[2026-04-10 00:34:30] local.INFO: Wikimedia API returned 403 for 'integration by parts LIATE rule diagram'  
+[2026-04-10 00:34:31] local.INFO: Image found for 'integration by parts LIATE rule diagram': https://images.pexels.com/photos/6256063/pexels-photo-6256063.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:31] local.INFO: AI source validated: https://tutorial.math.lamar.edu/Classes/CalcII/IntegrationByParts.aspx  
+[2026-04-10 00:34:32] local.INFO: Sources result: 1 sources for 'Integration by Parts'  
+[2026-04-10 00:34:32] local.INFO: Quiz: 'Techniques Quiz' with 5 questions  
+[2026-04-10 00:34:32] local.INFO: Wikimedia API returned 403 for 'Advanced Topics: Series and Multivariable overview diagram'  
+[2026-04-10 00:34:33] local.INFO: Image found for 'Advanced Topics: Series and Multivariable overview diagram': https://images.pexels.com/photos/10024568/pexels-photo-10024568.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:33] local.INFO: AI source validated: https://en.wikipedia.org/wiki/Convergent_series  
+[2026-04-10 00:34:33] local.INFO: AI source validated: https://ocw.mit.edu/courses/mathematics/18-02sc-multivariable-calculus-fall-2010/  
+[2026-04-10 00:34:33] local.INFO: Wikimedia API returned 403 for 'taylor series approximation diagram'  
+[2026-04-10 00:34:34] local.INFO: Image found for 'taylor series approximation diagram': https://images.pexels.com/photos/25626435/pexels-photo-25626435.jpeg?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:34] local.INFO: AI source validated: https://en.wikipedia.org/wiki/Convergent_series  
+[2026-04-10 00:34:35] local.INFO: Sources result: 1 sources for 'Infinite Series and Convergence'  
+[2026-04-10 00:34:35] local.INFO: Wikimedia API returned 403 for 'partial derivative 3d surface diagram'  
+[2026-04-10 00:34:35] local.INFO: Image found for 'partial derivative 3d surface diagram': https://images.pexels.com/photos/18069230/pexels-photo-18069230.png?auto=compress&cs=tinysrgb&h=650&w=940  
+[2026-04-10 00:34:36] local.INFO: AI source validated: https://ocw.mit.edu/courses/mathematics/18-02sc-multivariable-calculus-fall-2010/  
+[2026-04-10 00:34:36] local.INFO: Sources result: 1 sources for 'Introduction to Multivariable Calculus'  
+[2026-04-10 00:34:36] local.INFO: Quiz: 'Advanced Topics Quiz' with 5 questions  
+[2026-04-10 00:34:36] local.INFO: Formation 'Mastering Calculus: From Limits to Multivariable Systems' imported (ID: 9)  
