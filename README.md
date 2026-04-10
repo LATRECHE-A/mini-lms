@@ -92,22 +92,6 @@ Users (admin/apprenant)
 ### Sécurité
 CSRF, XSS (ContentSanitizer), IDOR (Policies + Gate), `$fillable` whitelist, quiz anti-triche (réponses exclues du client + pessimistic locking), MIME whitelist uploads, URL blocklist, Mermaid `securityLevel: strict`, API key isolation `.env`.
 
-## Configuration `.env`
-
-```env
-GEMINI_API_KEY=your-key
-GEMINI_MODEL=gemini-2.0-flash
-GEMINI_TIMEOUT=90
-PEXELS_API_KEY=your-key        # optionnel, fallback images
-```
-
-## Comptes démo
-
-| Rôle | Email | Mot de passe |
-|---|---|---|
-| Admin | admin@lms.test | password |
-| Apprenant | student@lms.test | password |
-
 ## Structure
 
 ```
