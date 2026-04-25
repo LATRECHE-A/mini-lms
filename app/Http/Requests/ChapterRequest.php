@@ -22,7 +22,7 @@ class ChapterRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:2000'],
+            'description' => ['nullable', 'string', 'max:10000'],
             'order' => ['nullable', 'integer', 'min:0'],
             'image_url' => ['nullable', 'url', 'max:2048'],
             'image_alt' => ['nullable', 'string', 'max:512'],

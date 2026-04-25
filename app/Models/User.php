@@ -3,8 +3,8 @@
 /**
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
  *
- * Model representing a user in the system, with roles (admin or student) 
- *  and relationships to formations, quiz attempts, notes, personal notes, todos, AI generations, and activity logs.
+ * Model representing a user in the system, with roles (admin or student)
+ * and relationships to formations, quiz attempts, notes, personal notes, todos, AI generations, flashcards, and activity logs.
  */
 
 namespace App\Models;
@@ -19,27 +19,14 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'role',
-    ];
+    protected $fillable = ['name', 'email', 'password', 'role'];
 
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return ['email_verified_at' => 'datetime', 'password' => 'hashed'];
     }
-
-    // Role Helpers
 
     public function isAdmin(): bool
     {
@@ -52,12 +39,9 @@ class User extends Authenticatable
     }
 
     // Relationships
-
     public function formations(): BelongsToMany
     {
-        return $this->belongsToMany(Formation::class)
-            ->withPivot('enrolled_at')
-            ->withTimestamps();
+        return $this->belongsToMany(Formation::class)->withPivot('enrolled_at')->withTimestamps();
     }
 
     public function quizAttempts(): HasMany
@@ -90,8 +74,12 @@ class User extends Authenticatable
         return $this->hasMany(ActivityLog::class);
     }
 
-    // Scopes
+    public function flashcards(): HasMany
+    {
+        return $this->hasMany(Flashcard::class);
+    }
 
+    // Scopes
     public function scopeStudents($query)
     {
         return $query->where('role', 'apprenant');

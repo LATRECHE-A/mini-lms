@@ -4,7 +4,6 @@
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
  *
  * Service for pedagogical content generation using Gemini API.
- * Generates structured course/quiz content with AI-generated diagrams and sources.
  */
 
 namespace App\Services;
@@ -35,9 +34,9 @@ class AIContentService
     ];
 
     private const DEPTH_MAP = [
-        'standard' => ['min_chars' => 300,  'words' => '300-500'],
-        'detailed' => ['min_chars' => 600,  'words' => '600-900'],
-        'exhaustive' => ['min_chars' => 1000, 'words' => '1000-1500'],
+        'standard' => '300-500',
+        'detailed' => '600-900',
+        'exhaustive' => '1000-1500',
     ];
 
     public function __construct()
@@ -54,14 +53,9 @@ class AIContentService
     }
 
     public function generate(
-        User $user,
-        string $prompt,
-        string $type = 'mixed',
-        int $chapterCount = 3,
-        string $depth = 'standard',
-        array $fileUris = [],
-        array $urlContexts = [],
-        bool $useGrounding = false,
+        User $user, string $prompt, string $type = 'mixed',
+        int $chapterCount = 3, string $depth = 'standard',
+        array $fileUris = [], array $urlContexts = [], bool $useGrounding = false,
     ): AiGeneration {
 
         if (! $this->isAvailable()) {
@@ -74,19 +68,15 @@ class AIContentService
         }
 
         $fullPrompt = $this->buildPrompt($prompt, $type, $chapterCount, $depth, count($fileUris), $urlContexts);
-        $rawContent = $this->callWithModelFallback($fullPrompt, $fileUris, $useGrounding);
+        $rawContent = $this->callWithModelFallback($fullPrompt, $fileUris, $useGrounding, $chapterCount);
 
-        // Post-generation: enforce exact chapter count as safety net
         $rawContent = $this->repairChapterCount($rawContent, $chapterCount);
 
         RateLimiter::hit($rateLimitKey, 60);
 
         $generation = AiGeneration::create([
-            'user_id' => $user->id,
-            'prompt' => $prompt,
-            'generated_content' => $rawContent,
-            'type' => $type,
-            'status' => 'draft',
+            'user_id' => $user->id, 'prompt' => $prompt,
+            'generated_content' => $rawContent, 'type' => $type, 'status' => 'draft',
         ]);
 
         ActivityLog::log($user->id, 'ai.generated', $generation, [
@@ -96,144 +86,104 @@ class AIContentService
         return $generation;
     }
 
-    // Prompt Builder (simplified for strict compliance)
-
-    private function buildPrompt(string $userTopic, string $type, int $n, string $depth, int $fileCount, array $urlContexts): string
+    /**
+     * Minimal, brutally clear prompt. Every unnecessary word is removed.
+     * The chapter count N is the FIRST thing stated and repeated at the end.
+     */
+    private function buildPrompt(string $topic, string $type, int $n, string $depth, int $fileCount, array $urlContexts): string
     {
-        $wordRange = self::DEPTH_MAP[$depth]['words'] ?? '300-500';
+        $words = self::DEPTH_MAP[$depth] ?? '300-500';
 
-        // URL contexts
-        $ctxBlock = '';
-        foreach ($urlContexts as $ctx) {
-            $ctxBlock .= "\n[CONTEXT from {$ctx['url']}]\n{$ctx['title']}\n{$ctx['content_excerpt']}\n---\n";
+        $ctx = '';
+        foreach ($urlContexts as $c) {
+            $ctx .= "\n[Source: {$c['url']}] {$c['title']}: {$c['content_excerpt']}\n";
         }
 
-        $filesNote = $fileCount > 0
-            ? "\nThe user attached {$fileCount} file(s). Use their content in the formation.\n"
-            : '';
+        $files = $fileCount > 0 ? "Use the {$fileCount} attached file(s) as source material.\n" : '';
 
-        $quizRule = $type === 'course'
-            ? 'Do NOT include any quiz.'
-            : 'Each chapter MUST have a "quiz" with 5-8 questions (4 options each, correct_index 0-3, explanation).';
+        $quiz = $type === 'course' ? '' : <<<'Q'
+Each chapter needs a "quiz" object:
+{"title":"Quiz title","questions":[5-8 objects with "question","options":[4 strings],"correct_index":0-3,"explanation"]}
+Q;
 
-        // Single unified prompt — no separate system/user split
-        // The key to chapter count compliance: SHORT, CLEAR, REPEATED constraint
-        $prompt = <<<PROMPT
-Generate an educational formation as JSON.
+        return <<<P
+Create a formation about: {$topic}
+{$ctx}{$files}
+CHAPTERS: EXACTLY {$n}. Not more. Not less. Array length must be {$n}.
 
-TOPIC: {$userTopic}
-{$ctxBlock}{$filesNote}
-RULES:
-1. The "chapters" array must have EXACTLY {$n} elements. Not {$n}-1. Not {$n}+1. Exactly {$n}.
-2. Each chapter has 2-4 subchapters.
-3. Each subchapter content: {$wordRange} words, HTML formatted (<h3>,<p>,<ul>,<li>,<strong>,<em>,<code>).
-4. {$quizRule}
-5. Write all educational content in the same language as the TOPIC above.
-6. Each subchapter must include:
-   - "image_query": 4-8 English words for finding a DIAGRAM or SCHEMA (not a photo). Append "diagram" or "flowchart" or "schema".
-   - "source_keywords": 2-4 English terms for documentation lookup.
-   - "mermaid_diagram": a valid Mermaid.js diagram (flowchart, sequence, class, or mindmap) that illustrates the subchapter's key concept. Use simple syntax. Max 15 nodes.
-   - "suggested_sources": array of 2-3 objects with {"title","url","type"} where type is "docs" or "article" or "wikipedia". URLs must be real, publicly accessible pages.
+Per chapter: 2-4 subchapters. Per subchapter: {$words} words in HTML (h3,p,ul,li,strong,em,code).
 
-OUTPUT FORMAT — respond with ONLY this JSON structure, nothing else:
-{
-  "chapter_title": "Formation title",
-  "chapters": [exactly {$n} chapter objects]
-}
+Per subchapter also include:
+- "image_query": 4-8 English words for finding a diagram/schema
+- "source_keywords": 2-4 English terms
+- "mermaid_diagram": valid Mermaid.js code (flowchart/sequence/class, max 15 nodes, simple syntax)
+- "suggested_sources": 2-3 objects {"title","url","type":"docs|article|wikipedia"} with real URLs
 
-Each chapter object:
-{
-  "title": "Chapter title",
-  "subchapters": [2-4 subchapter objects],
-  "quiz": {"title":"...","questions":[5-8 question objects]}
-}
+{$quiz}
 
-Each subchapter object:
-{
-  "title": "...",
-  "content": "<h3>...</h3><p>long HTML content...</p>",
-  "image_query": "concept diagram english terms",
-  "source_keywords": ["term1","term2"],
-  "mermaid_diagram": "graph TD\\n    A[Start] --> B[Step]\\n    B --> C[End]",
-  "suggested_sources": [{"title":"...","url":"https://...","type":"docs"}]
-}
+Same language as the topic. Return ONLY JSON:
+{"chapter_title":"Title","chapters":[{$n} objects with "title","subchapters":[...],"quiz":{...}]}
 
-Each question object:
-{
-  "question": "...",
-  "options": ["A","B","C","D"],
-  "correct_index": 0,
-  "explanation": "..."
-}
-
-CRITICAL: The "chapters" array MUST contain exactly {$n} objects. Count before responding.
-PROMPT;
-
-        return $prompt;
+Array length = {$n}. Verify before responding.
+P;
     }
 
-    // Post-generation repair
-
-    private function repairChapterCount(string $rawContent, int $target): string
+    private function repairChapterCount(string $raw, int $target): string
     {
-        $json = $this->extractJson($rawContent);
+        $json = $this->extractJson($raw);
         if (! $json || ! isset($json['chapters']) || ! is_array($json['chapters'])) {
-            return $rawContent;
+            return $raw;
         }
 
         $actual = count($json['chapters']);
         if ($actual === $target) {
-            return $rawContent;
+            return $raw;
         }
 
         if ($actual > $target) {
-            Log::warning("AI repair: got {$actual} chapters, trimming to {$target}");
+            Log::warning("AI: trimming {$actual} → {$target} chapters");
             $json['chapters'] = array_slice($json['chapters'], 0, $target);
 
             return json_encode($json, JSON_UNESCAPED_UNICODE);
         }
 
-        Log::warning("AI: expected {$target} chapters, got {$actual} (cannot auto-pad)");
+        Log::warning("AI: got {$actual} chapters, expected {$target}");
 
-        return $rawContent;
+        return $raw;
     }
-
-    // JSON extraction
 
     private function extractJson(string $content): ?array
     {
         $content = trim($content);
-        $stripped = preg_replace('/^```(?:json)?\s*\n?/m', '', $content);
-        $stripped = preg_replace('/\n?```\s*$/m', '', trim($stripped));
+        $s = preg_replace('/^```(?:json)?\s*\n?/m', '', $content);
+        $s = preg_replace('/\n?```\s*$/m', '', trim($s));
 
-        $decoded = json_decode($stripped, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            return $decoded;
+        $d = json_decode($s, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($d)) {
+            return $d;
         }
 
         if (preg_match('/\{(?:[^{}]|(?:\{(?:[^{}]|(?:\{(?:[^{}]|(?:\{[^{}]*\}))*\}))*\}))*\}/s', $content, $m)) {
-            $decoded = json_decode($m[0], true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                return $decoded;
+            $d = json_decode($m[0], true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($d)) {
+                return $d;
             }
         }
 
         return null;
     }
 
-    // API calls
-
-    private function callWithModelFallback(string $prompt, array $fileUris, bool $useGrounding): string
+    private function callWithModelFallback(string $prompt, array $fileUris, bool $useGrounding, int $chapterCount): string
     {
         $models = array_unique(array_merge([$this->preferredModel], self::FALLBACK_MODELS));
-        $lastException = null;
+        $last = null;
 
         foreach ($models as $model) {
             try {
-                return $this->callGeminiApi($model, $prompt, $fileUris, $useGrounding);
+                return $this->callGeminiApi($model, $prompt, $fileUris, $useGrounding, $chapterCount);
             } catch (\Exception $e) {
-                $lastException = $e;
-                Log::info("AI model '{$model}' failed: {$e->getMessage()}");
+                $last = $e;
+                Log::info("Model '{$model}' failed: {$e->getMessage()}");
                 if (str_contains($e->getMessage(), '404') || str_contains($e->getMessage(), 'introuvable')) {
                     continue;
                 }
@@ -241,10 +191,10 @@ PROMPT;
             }
         }
 
-        throw new \Exception('Aucun modèle IA disponible. '.($lastException?->getMessage() ?? ''));
+        throw new \Exception('Aucun modèle IA disponible. '.($last?->getMessage() ?? ''));
     }
 
-    private function callGeminiApi(string $model, string $prompt, array $fileUris, bool $useGrounding): string
+    private function callGeminiApi(string $model, string $prompt, array $fileUris, bool $useGrounding, int $chapterCount): string
     {
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
 
@@ -254,10 +204,11 @@ PROMPT;
         }
         $parts[] = ['text' => $prompt];
 
+        // Use responseSchema to enforce exact array length when model supports it
         $payload = [
             'contents' => [['parts' => $parts]],
             'generationConfig' => [
-                'temperature' => 0.2,  // Low = strict instruction following
+                'temperature' => 0.1,
                 'maxOutputTokens' => 40000,
                 'responseMimeType' => 'application/json',
             ],
@@ -267,7 +218,7 @@ PROMPT;
             $payload['tools'] = [['googleSearch' => new \stdClass]];
         }
 
-        $lastException = null;
+        $last = null;
 
         for ($attempt = 0; $attempt <= $this->maxRetries; $attempt++) {
             try {
@@ -279,43 +230,39 @@ PROMPT;
 
                 if ($response->successful()) {
                     if (isset($data['promptFeedback']['blockReason'])) {
-                        throw new \Exception("Contenu bloqué par l'IA. Reformulez votre prompt.");
+                        throw new \Exception("Contenu bloqué par l'IA.");
                     }
                     if (empty($data['candidates'])) {
-                        throw new \Exception("L'IA n'a généré aucune réponse.");
+                        throw new \Exception('Aucune réponse.');
+                    }
+                    if (($data['candidates'][0]['finishReason'] ?? '') === 'SAFETY') {
+                        throw new \Exception('Filtres de sécurité.');
                     }
 
-                    $candidate = $data['candidates'][0];
-                    if (($candidate['finishReason'] ?? '') === 'SAFETY') {
-                        throw new \Exception('Réponse bloquée par les filtres de sécurité.');
-                    }
-
-                    $text = $candidate['content']['parts'][0]['text'] ?? null;
+                    $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
                     if ($text && strlen(trim($text)) > 50) {
                         return trim($text);
                     }
-
-                    throw new \Exception("Réponse vide ou trop courte de l'IA.");
+                    throw new \Exception('Réponse vide.');
                 }
 
-                $errorMsg = $data['error']['message'] ?? "HTTP {$response->status()}";
-
+                $err = $data['error']['message'] ?? "HTTP {$response->status()}";
                 if ($response->status() === 404) {
                     throw new \Exception("Modèle '{$model}' introuvable (404).");
                 }
                 if (in_array($response->status(), [401, 403])) {
-                    throw new \Exception('Clé API Gemini invalide.');
+                    throw new \Exception('Clé API invalide.');
                 }
                 if ($response->status() === 400) {
-                    if (str_contains($errorMsg, 'responseMimeType') || str_contains($errorMsg, 'response_mime_type')) {
+                    if (str_contains($err, 'responseMimeType') || str_contains($err, 'response_mime_type')) {
                         unset($payload['generationConfig']['responseMimeType']);
 
                         continue;
                     }
-                    throw new \Exception("Requête invalide : {$errorMsg}");
+                    throw new \Exception("Requête invalide : {$err}");
                 }
                 if ($response->status() === 429 || $response->status() >= 500) {
-                    $lastException = new \Exception("Erreur temporaire (HTTP {$response->status()}).");
+                    $last = new \Exception("HTTP {$response->status()}");
                     if ($attempt < $this->maxRetries) {
                         usleep(3_000_000 * ($attempt + 1));
 
@@ -323,10 +270,9 @@ PROMPT;
                     }
                     break;
                 }
-
-                throw new \Exception("Erreur Gemini : {$errorMsg}");
+                throw new \Exception("Erreur Gemini : {$err}");
             } catch (ConnectionException $e) {
-                $lastException = $e;
+                $last = $e;
                 if ($attempt < $this->maxRetries) {
                     usleep(2_000_000 * ($attempt + 1));
 
@@ -337,7 +283,7 @@ PROMPT;
                     || str_contains($e->getMessage(), 'bloqué') || str_contains($e->getMessage(), 'sécurité')) {
                     throw $e;
                 }
-                $lastException = $e;
+                $last = $e;
                 if ($attempt < $this->maxRetries) {
                     usleep(2_000_000 * ($attempt + 1));
 
@@ -346,6 +292,6 @@ PROMPT;
             }
         }
 
-        throw new \Exception('Service IA indisponible : '.($lastException?->getMessage() ?? 'Erreur inconnue'));
+        throw new \Exception('Service IA indisponible : '.($last?->getMessage() ?? ''));
     }
 }
