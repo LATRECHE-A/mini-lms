@@ -3,7 +3,7 @@
 /**
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
  *
- * Flashcard service: SM-2 algorithm, AI generation, template cloning on enrollment.
+ * FlashcardService: SM-2 algorithm, AI generation (flashcards + quizzes), template cloning.
  */
 
 namespace App\Services;
@@ -51,9 +51,6 @@ class FlashcardService
         return $card;
     }
 
-    /**
-     * Get due cards, optionally filtered by formation or subchapter.
-     */
     public function getDueCards(User $user, ?int $formationId = null, ?int $subChapterId = null, int $limit = 20)
     {
         $query = Flashcard::dueForReview($user->id)->with('subChapter.chapter');
@@ -67,9 +64,6 @@ class FlashcardService
         return $query->limit($limit)->get();
     }
 
-    /**
-     * Get stats for a user, optionally per formation.
-     */
     public function getStats(User $user, ?int $formationId = null): array
     {
         $base = Flashcard::byUser($user->id)->personal();
@@ -87,40 +81,7 @@ class FlashcardService
     }
 
     /**
-     * Get flashcards organized by formation → chapter → subchapter.
-     */
-    public function getOrganizedCards(User $user, bool $templatesOnly = false): array
-    {
-        $query = Flashcard::byUser($user->id)->with('subChapter.chapter.formation');
-        if ($templatesOnly) {
-            $query->templates();
-        } else {
-            $query->personal();
-        }
-
-        $cards = $query->orderBy('sub_chapter_id')->get();
-
-        $organized = [];
-        foreach ($cards as $card) {
-            $formation = $card->formation;
-            $chapter = $card->chapter;
-            $sub = $card->subChapter;
-
-            if (! $formation || ! $chapter || ! $sub) {
-                $organized['Sans formation']['Divers']['Général'][] = $card;
-
-                continue;
-            }
-
-            $organized[$formation->name][$chapter->title][$sub->title][] = $card;
-        }
-
-        return $organized;
-    }
-
-    /**
-     * Clone all template flashcards of a formation to a student.
-     * Called when admin enrolls a student.
+     * Clone template flashcards to a student on enrollment.
      */
     public function cloneTemplatesForStudent(Formation $formation, User $student): int
     {
@@ -130,7 +91,6 @@ class FlashcardService
 
         $cloned = 0;
         foreach ($templates as $tpl) {
-            // Skip if student already has a card for this subchapter+question
             $exists = Flashcard::byUser($student->id)
                 ->forSubChapter($tpl->sub_chapter_id)
                 ->where('question', $tpl->question)
@@ -151,35 +111,115 @@ class FlashcardService
         }
 
         if ($cloned > 0) {
-            Log::info("Cloned {$cloned} flashcards for student {$student->id} in formation {$formation->id}");
+            Log::info("Cloned {$cloned} flashcards for student {$student->id}");
         }
 
         return $cloned;
     }
 
-    /**
-     * Remove cloned flashcards when student is unenrolled.
-     */
     public function removeStudentCards(Formation $formation, User $student): int
     {
         return Flashcard::byUser($student->id)
             ->forFormation($formation->id)
             ->personal()
-            ->where('review_count', 0) // Only delete unreviewed (don't lose progress)
+            ->where('review_count', 0)
             ->delete();
     }
 
     /**
      * Generate flashcards from a subchapter via AI.
-     * If admin: creates as templates. If student: creates as personal.
+     * Admin gets BOTH templates (for distribution) AND personal copies (for studying).
      */
     public function generateFromSubChapter(SubChapter $subChapter, User $user): array
     {
-        $apiKey = trim(config('services.gemini.api_key', ''));
-        if (empty($apiKey)) {
+        $cards = $this->callGeminiForCards($subChapter, 'flashcard');
+        if (empty($cards)) {
             return [];
         }
 
+        $isAdmin = $user->isAdmin();
+        $created = [];
+
+        foreach ($cards as $c) {
+            $q = trim($c['question'] ?? '');
+            $a = trim($c['answer'] ?? '');
+            if (empty($q) || empty($a)) {
+                continue;
+            }
+
+            if ($isAdmin) {
+                // Create template (for student distribution)
+                Flashcard::create([
+                    'user_id' => $user->id,
+                    'sub_chapter_id' => $subChapter->id,
+                    'question' => $q,
+                    'answer' => $a,
+                    'is_template' => true,
+                ]);
+
+                // Create personal copy (so admin can study)
+                $created[] = Flashcard::create([
+                    'user_id' => $user->id,
+                    'sub_chapter_id' => $subChapter->id,
+                    'question' => $q,
+                    'answer' => $a,
+                    'is_template' => false,
+                ]);
+            } else {
+                $created[] = Flashcard::create([
+                    'user_id' => $user->id,
+                    'sub_chapter_id' => $subChapter->id,
+                    'question' => $q,
+                    'answer' => $a,
+                    'is_template' => false,
+                ]);
+            }
+        }
+
+        Log::info('Generated '.count($created)." flashcards for sub_chapter {$subChapter->id}");
+
+        return $created;
+    }
+
+    /**
+     * Generate a quiz for a subchapter via AI (Issue #2).
+     * Returns quiz data array or null.
+     */
+    public function generateQuizForSubChapter(SubChapter $subChapter): ?array
+    {
+        $content = strip_tags($subChapter->content ?? '');
+        if (strlen($content) < 50) {
+            return null;
+        }
+
+        $prompt = <<<P
+Generate a quiz with 5-8 questions from this educational content.
+
+Title: {$subChapter->title}
+Content: {$content}
+
+Return ONLY JSON: {"title":"Quiz: {$subChapter->title}","questions":[{"question":"...","options":["A","B","C","D"],"correct_index":0,"explanation":"..."}]}
+Each question must have exactly 4 options. correct_index is 0-based.
+Same language as the content. No markdown.
+P;
+
+        $result = $this->callGeminiRaw($prompt);
+        if (! $result) {
+            return null;
+        }
+
+        $decoded = json_decode($result, true);
+        if (! is_array($decoded) || empty($decoded['questions'])) {
+            return null;
+        }
+
+        return $decoded;
+    }
+
+    // Private Gemini helpers
+
+    private function callGeminiForCards(SubChapter $subChapter, string $type): array
+    {
         $content = strip_tags($subChapter->content ?? '');
         if (strlen($content) < 50) {
             return [];
@@ -196,9 +236,26 @@ Questions: concise (1-2 sentences). Answers: clear (1-3 sentences).
 Same language as the content. No markdown.
 P;
 
+        $result = $this->callGeminiRaw($prompt);
+        if (! $result) {
+            return [];
+        }
+
+        $cards = json_decode($result, true);
+
+        return is_array($cards) ? $cards : [];
+    }
+
+    private function callGeminiRaw(string $prompt): ?string
+    {
+        $apiKey = trim(config('services.gemini.api_key', ''));
+        if (empty($apiKey)) {
+            return null;
+        }
+
         try {
             $model = config('services.gemini.model', 'gemini-2.0-flash');
-            $response = Http::timeout(30)
+            $response = Http::timeout(30)->connectTimeout(10)
                 ->withHeaders(['Content-Type' => 'application/json', 'X-goog-api-key' => $apiKey])
                 ->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent", [
                     'contents' => [['parts' => [['text' => $prompt]]]],
@@ -206,44 +263,18 @@ P;
                 ]);
 
             if (! $response->successful()) {
-                return [];
+                return null;
             }
 
             $text = $response->json('candidates.0.content.parts.0.text') ?? '';
             $text = preg_replace('/^```(?:json)?\s*\n?/m', '', trim($text));
             $text = preg_replace('/\n?```\s*$/m', '', $text);
-            $cards = json_decode(trim($text), true);
 
-            if (! is_array($cards)) {
-                return [];
-            }
-
-            $isAdmin = $user->isAdmin();
-            $created = [];
-
-            foreach ($cards as $c) {
-                $q = trim($c['question'] ?? '');
-                $a = trim($c['answer'] ?? '');
-                if (empty($q) || empty($a)) {
-                    continue;
-                }
-
-                $created[] = Flashcard::create([
-                    'user_id' => $user->id,
-                    'sub_chapter_id' => $subChapter->id,
-                    'question' => $q,
-                    'answer' => $a,
-                    'is_template' => $isAdmin,
-                ]);
-            }
-
-            Log::info('Generated '.count($created)." flashcards (template={$isAdmin}) for sub_chapter {$subChapter->id}");
-
-            return $created;
+            return trim($text);
         } catch (\Throwable $e) {
-            Log::warning("Flashcard generation failed: {$e->getMessage()}");
+            Log::warning("Gemini call failed: {$e->getMessage()}");
 
-            return [];
+            return null;
         }
     }
 }

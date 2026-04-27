@@ -10,10 +10,13 @@
         </a>
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-bold text-slate-900">{{ $subchapter->title }}</h1>
+            {{-- Edit button only for formations created by this student --}}
+            @if($formation->isOwnedBy(auth()->user()))
             <a href="{{ route('student.subchapters.edit', $subchapter) }}" class="text-sm text-slate-500 hover:text-brand-600 inline-flex items-center gap-1.5 border border-slate-200 rounded-lg px-3 py-1.5 hover:border-brand-300 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                 Modifier
             </a>
+            @endif
         </div>
     </div>
 
@@ -29,7 +32,7 @@
 
                 @if($subchapter->mermaid_code)
                 <div class="mb-6 bg-gradient-to-br from-slate-50 to-sky-50 rounded-lg border border-slate-200 p-5 overflow-x-auto">
-                    <p class="text-xs text-slate-500 mb-3 font-medium"><span>📊</span> Schéma explicatif</p>
+                    <p class="text-xs text-slate-500 mb-3 font-medium">📊 Schéma explicatif</p>
                     <div class="flex justify-center"><pre class="mermaid text-sm">{{ $subchapter->mermaid_code }}</pre></div>
                 </div>
                 @endif
@@ -42,13 +45,13 @@
 
                 @if($subchapter->sources && is_array($subchapter->sources) && count($subchapter->sources) > 0)
                 <div class="mt-8 pt-6 border-t border-slate-200">
-                    <h3 class="text-sm font-semibold text-slate-700 mb-3"><span>📚</span> Pour aller plus loin</h3>
+                    <h3 class="text-sm font-semibold text-slate-700 mb-3">📚 Pour aller plus loin</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         @foreach($subchapter->sources as $source)
                         <a href="{{ $source['url'] }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-lg border border-slate-200 hover:border-brand-300 hover:bg-brand-50 transition-colors group">
-                            <span class="text-lg flex-shrink-0">@if(($source['type'] ?? '') === 'wikipedia') 📖 @elseif(($source['type'] ?? '') === 'docs') 📄 @else 🔗 @endif</span>
+                            <span class="text-lg">@if(($source['type'] ?? '') === 'wikipedia') 📖 @elseif(($source['type'] ?? '') === 'docs') 📄 @else 🔗 @endif</span>
                             <div class="min-w-0">
-                                <p class="text-sm font-medium text-slate-700 group-hover:text-brand-700 truncate">{{ $source['title'] ?? $source['url'] }}</p>
+                                <p class="text-sm font-medium text-slate-700 group-hover:text-brand-700 truncate">{{ $source['title'] ?? 'Lien' }}</p>
                                 <p class="text-xs text-slate-400 truncate">{{ parse_url($source['url'], PHP_URL_HOST) }}</p>
                             </div>
                         </a>
@@ -58,16 +61,29 @@
                 @endif
             </div>
 
-            {{-- Flashcard + Quiz actions --}}
+            {{-- Action buttons --}}
             <div class="flex flex-wrap items-center gap-3 mb-6">
+                {{-- Flashcards --}}
                 <form method="POST" action="{{ route('student.flashcards.generate', $subchapter) }}">
                     @csrf
                     <button type="submit" class="bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 text-sm font-medium py-2.5 px-5 rounded-lg transition-colors inline-flex items-center gap-2"
                         onclick="this.disabled=true; this.innerHTML='⚡ Génération...'; this.form.submit();">
-                        ⚡ Générer des flashcards
+                        ⚡ Flashcards IA
                     </button>
                 </form>
-                <a href="{{ route('student.flashcards.subchapter', $subchapter) }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Voir mes flashcards →</a>
+
+                {{-- AI Quiz (only if no quiz exists) --}}
+                @if(!$subchapter->quiz)
+                <form method="POST" action="{{ route('student.ai.generate-quiz', $subchapter) }}">
+                    @csrf
+                    <button type="submit" class="bg-violet-50 hover:bg-violet-100 border border-violet-200 text-violet-700 text-sm font-medium py-2.5 px-5 rounded-lg transition-colors inline-flex items-center gap-2"
+                        onclick="this.disabled=true; this.innerHTML='🧠 Génération...'; this.form.submit();">
+                        🧠 Quiz IA
+                    </button>
+                </form>
+                @endif
+
+                <a href="{{ route('student.flashcards.subchapter', $subchapter) }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Mes flashcards →</a>
                 <a href="{{ route('student.flashcards.study', ['sub_chapter_id' => $subchapter->id]) }}" class="text-sm text-slate-500 hover:text-slate-700">Étudier →</a>
             </div>
 
@@ -89,7 +105,7 @@
             @endif
         </div>
 
-        {{-- Personal notes --}}
+        {{-- Sidebar --}}
         <div>
             <div class="bg-white rounded-xl border border-slate-200">
                 <div class="px-5 py-4 border-b border-slate-100">
@@ -98,8 +114,8 @@
                 <form method="POST" action="{{ route('student.notes.store') }}" class="px-5 py-3 border-b border-slate-100">
                     @csrf
                     <input type="hidden" name="sub_chapter_id" value="{{ $subchapter->id }}">
-                    <input type="text" name="title" placeholder="Titre..." required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm mb-2 focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
-                    <textarea name="content" rows="2" placeholder="Contenu..." class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm mb-2 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"></textarea>
+                    <input type="text" name="title" placeholder="Titre..." required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm mb-2 focus:ring-2 focus:ring-brand-500">
+                    <textarea name="content" rows="2" placeholder="Contenu..." class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm mb-2 focus:ring-2 focus:ring-brand-500"></textarea>
                     <button type="submit" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Enregistrer</button>
                 </form>
                 @forelse($personalNotes as $note)

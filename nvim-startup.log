@@ -1,0 +1,4 @@
+=== Neovim startup warnings/errors ===
+
+
+defaults.lua: Did not detect DSR response from terminal. This results in a slower startup time.

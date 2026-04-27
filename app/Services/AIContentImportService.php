@@ -4,7 +4,8 @@
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
  *
  * Service to import AI-generated content as Formations.
- * Handles enrichment with images (Wikimedia/Pexels), AI-suggested sources, and Mermaid diagrams.
+ * Handles enrichment, quiz creation, and flashcard generation.
+ * Sets created_by for ownership tracking.
  */
 
 namespace App\Services;
@@ -23,27 +24,36 @@ class AIContentImportService
         private AIContentParserService $parser,
         private ImageEnrichmentService $imageEnrichment,
         private SourceFinderService $sourceFinder,
+        private FlashcardService $flashcardService,
     ) {}
 
-    public function importAsFormation(string $rawContent, ?string $formationName = null, string $level = 'débutant', string $status = 'draft'): Formation
-    {
+    /**
+     * Admin import - sets created_by to the admin.
+     */
+    public function importAsFormation(
+        string $rawContent, User $user, ?string $formationName = null,
+        string $level = 'débutant', string $status = 'draft', bool $generateFlashcards = false,
+    ): Formation {
         $parsed = $this->parser->parse($rawContent);
         if (! $parsed['parsed']) {
             throw new \Exception("Le contenu n'a pas pu être analysé. Régénérez le contenu.");
         }
 
-        return $this->createFormationFromParsed($parsed, $formationName, $level, $status);
+        return $this->createFormationFromParsed($parsed, $user, $formationName, $level, $status, $generateFlashcards);
     }
 
-    public function importForStudent(string $rawContent, User $student): Formation
+    /**
+     * Student validation - sets created_by to the student, auto-enrolls.
+     */
+    public function importForStudent(string $rawContent, User $student, bool $generateFlashcards = false): Formation
     {
         $parsed = $this->parser->parse($rawContent);
         if (! $parsed['parsed']) {
             throw new \Exception('Contenu non analysable. Régénérez avant de valider.');
         }
 
-        return DB::transaction(function () use ($parsed, $student) {
-            $formation = $this->createFormationFromParsed($parsed, null, 'débutant', 'published');
+        return DB::transaction(function () use ($parsed, $student, $generateFlashcards) {
+            $formation = $this->createFormationFromParsed($parsed, $student, null, 'débutant', 'published', $generateFlashcards);
             $formation->update(['description' => 'Contenu personnel généré par IA — '.$student->name]);
             $formation->students()->attach($student->id, ['enrolled_at' => now()]);
             ActivityLog::log($student->id, 'formation.imported_from_ai', $formation);
@@ -52,15 +62,18 @@ class AIContentImportService
         });
     }
 
-    private function createFormationFromParsed(array $parsed, ?string $formationName, string $level, string $status): Formation
-    {
-        return DB::transaction(function () use ($parsed, $formationName, $level, $status) {
+    private function createFormationFromParsed(
+        array $parsed, User $creator, ?string $formationName,
+        string $level, string $status, bool $generateFlashcards,
+    ): Formation {
+        return DB::transaction(function () use ($parsed, $creator, $formationName, $level, $status, $generateFlashcards) {
 
             $formation = Formation::create([
                 'name' => $formationName ?: $parsed['chapter_title'],
                 'description' => 'Formation générée par IA.',
                 'level' => $level,
                 'status' => $status,
+                'created_by' => $creator->id,
             ]);
 
             $chapters = $parsed['chapters'] ?? [];
@@ -73,7 +86,9 @@ class AIContentImportService
                 ]];
             }
 
-            Log::info("Importing formation '{$formation->name}' with ".count($chapters).' chapters');
+            Log::info("Importing formation '{$formation->name}' with ".count($chapters)." chapters (by user {$creator->id})");
+
+            $allSubChapters = [];
 
             foreach ($chapters as $ci => $chapterData) {
                 $chapter = $this->createChapter($formation, $chapterData, $ci);
@@ -84,8 +99,8 @@ class AIContentImportService
 
                 foreach ($subs as $si => $subData) {
                     $subChapter = $this->createSubChapter($chapter, $subData, $si, $ci);
+                    $allSubChapters[] = $subChapter;
 
-                    // Attach quiz to last subchapter of each chapter
                     if ($quizData && $si === $subCount - 1) {
                         $this->createQuiz($subChapter, $quizData);
                     }
@@ -99,6 +114,18 @@ class AIContentImportService
                         'order' => 1,
                     ]);
                     $this->createQuiz($sub, $quizData);
+                    $allSubChapters[] = $sub;
+                }
+            }
+
+            // Generate flashcards if requested (type=full)
+            if ($generateFlashcards && ! empty($allSubChapters)) {
+                foreach ($allSubChapters as $sub) {
+                    try {
+                        $this->flashcardService->generateFromSubChapter($sub, $creator);
+                    } catch (\Throwable $e) {
+                        Log::warning("Flashcard generation failed for sub {$sub->id}: {$e->getMessage()}");
+                    }
                 }
             }
 
@@ -110,14 +137,10 @@ class AIContentImportService
 
     private function createChapter(Formation $formation, array $data, int $index): Chapter
     {
-        // Chapter image: use first subchapter's mermaid if available, else image search
         $chapterImage = ['image_url' => null, 'image_alt' => null, 'image_credit' => null];
-        $chapterMermaid = null;
 
         try {
-            // Try to get a diagram image for the chapter
-            $chapterQuery = ($data['title'] ?? '').' overview diagram';
-            $enriched = $this->imageEnrichment->enrichSubchapter(['image_query' => $chapterQuery]);
+            $enriched = $this->imageEnrichment->enrichSubchapter(['image_query' => ($data['title'] ?? '').' overview diagram']);
             $chapterImage = [
                 'image_url' => $enriched['image_url'] ?? null,
                 'image_alt' => $enriched['image_alt'] ?? null,
@@ -127,7 +150,6 @@ class AIContentImportService
             Log::warning("Chapter {$index} image failed: {$e->getMessage()}");
         }
 
-        // Chapter sources: aggregate AI sources from subchapters + validate
         $chapterSources = [];
         try {
             $allAiSources = [];
@@ -140,18 +162,17 @@ class AIContentImportService
                     $allKeywords[] = $kw;
                 }
             }
-            // Deduplicate by URL
             $seen = [];
-            $uniqueSources = [];
+            $unique = [];
             foreach ($allAiSources as $src) {
                 $u = $src['url'] ?? '';
                 if ($u && ! isset($seen[$u])) {
-                    $uniqueSources[] = $src;
+                    $unique[] = $src;
                     $seen[$u] = true;
                 }
             }
             $chapterSources = $this->sourceFinder->findSources(
-                array_slice($uniqueSources, 0, 4),
+                array_slice($unique, 0, 4),
                 array_unique(array_slice($allKeywords, 0, 4)),
                 $data['title'] ?? ''
             );
@@ -167,13 +188,11 @@ class AIContentImportService
             'image_alt' => $chapterImage['image_alt'],
             'image_credit' => $chapterImage['image_credit'],
             'sources' => ! empty($chapterSources) ? $chapterSources : null,
-            'mermaid_code' => $chapterMermaid,
         ]);
     }
 
     private function createSubChapter(Chapter $chapter, array $data, int $subIndex, int $chapterIndex): SubChapter
     {
-        // Image enrichment (non-critical)
         $imgData = ['image_url' => null, 'image_alt' => null, 'image_credit' => null];
         try {
             $enriched = $this->imageEnrichment->enrichSubchapter($data);
@@ -186,7 +205,6 @@ class AIContentImportService
             Log::warning("SubChapter ch{$chapterIndex}/sub{$subIndex} image failed: {$e->getMessage()}");
         }
 
-        // Source enrichment: AI-first with keyword fallback
         $sources = [];
         try {
             $sources = $this->sourceFinder->findSources(
@@ -198,7 +216,6 @@ class AIContentImportService
             Log::warning("SubChapter ch{$chapterIndex}/sub{$subIndex} sources failed: {$e->getMessage()}");
         }
 
-        // Mermaid diagram
         $mermaidCode = $data['mermaid_diagram'] ?? null;
         if (empty(trim($mermaidCode ?? ''))) {
             $mermaidCode = null;
@@ -237,7 +254,5 @@ class AIContentImportService
                 ]);
             }
         }
-
-        Log::info("Quiz: '{$quiz->title}' with ".count($quizData['questions'] ?? []).' questions');
     }
 }

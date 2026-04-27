@@ -3,7 +3,7 @@
 /**
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
  *
- * Admin AI Controller - generation, editing, import, AI partial rewrite.
+ * Admin AI Controller - generation, editing, import (with created_by), AI rewrite, quiz generation.
  */
 
 namespace App\Http\Controllers\Admin;
@@ -11,10 +11,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AIGenerateRequest;
 use App\Models\AiGeneration;
+use App\Models\SubChapter;
 use App\Services\AIContentImportService;
 use App\Services\AIContentParserService;
 use App\Services\AIContentService;
 use App\Services\ContentSanitizer;
+use App\Services\FlashcardService;
 use App\Services\GeminiFileUploadService;
 use App\Services\UrlContentExtractorService;
 use Illuminate\Http\Client\ConnectionException;
@@ -31,6 +33,7 @@ class AIController extends Controller
         private AIContentImportService $importer,
         private GeminiFileUploadService $fileUploader,
         private UrlContentExtractorService $urlExtractor,
+        private FlashcardService $flashcardService,
     ) {}
 
     public function index()
@@ -62,16 +65,24 @@ class AIController extends Controller
             $urlResult = $this->urlExtractor->extractFromPrompt($request->prompt);
             $useGrounding = ! empty($urlResult['failed_urls']) && empty($urlResult['contexts']);
 
+            // 'full' type generates as 'mixed' (content+quiz) — flashcards added at import
+            $aiType = $request->type === 'full' ? 'mixed' : $request->type;
+
             $generation = $this->aiService->generate(
                 user: $request->user(),
                 prompt: $request->prompt,
-                type: $request->type,
+                type: $aiType,
                 chapterCount: (int) $request->chapter_count,
                 depth: $request->depth,
                 fileUris: $fileUris,
                 urlContexts: $urlResult['contexts'],
                 useGrounding: $useGrounding,
             );
+
+            // Store original type for import
+            if ($request->type === 'full') {
+                $generation->update(['type' => 'full']);
+            }
 
             return redirect()->route('admin.ai.show', $generation)->with('success', 'Contenu généré avec succès.');
         } catch (\Exception $e) {
@@ -140,7 +151,16 @@ class AIController extends Controller
             'status' => ['required', 'in:draft,published'],
         ]);
         try {
-            $formation = $this->importer->importAsFormation($generation->generated_content, $request->formation_name ?: null, $request->level, $request->status);
+            $generateFlashcards = $generation->type === 'full';
+
+            $formation = $this->importer->importAsFormation(
+                $generation->generated_content,
+                auth()->user(),
+                $request->formation_name ?: null,
+                $request->level,
+                $request->status,
+                $generateFlashcards,
+            );
             $generation->update(['status' => 'published']);
 
             return redirect()->route('admin.formations.show', $formation)->with('success', 'Formation « '.$formation->name.' » créée.');
@@ -170,8 +190,7 @@ class AIController extends Controller
     }
 
     /**
-     * AI partial rewrite - AJAX endpoint.
-     * Receives selected text + instruction, returns rewritten text via Gemini.
+     * AI partial rewrite — AJAX.
      */
     public function rewrite(Request $request)
     {
@@ -182,63 +201,79 @@ class AIController extends Controller
 
         $apiKey = trim(config('services.gemini.api_key', ''));
         if (empty($apiKey)) {
-            return response()->json(['error' => 'Service IA non configuré. Ajoutez GEMINI_API_KEY dans .env.'], 422);
+            return response()->json(['error' => 'Service IA non configuré.'], 422);
         }
 
         $prompt = "You are an educational content editor. Rewrite the following text according to the instruction.\n\n"
-            ."Instruction: {$data['instruction']}\n\n"
-            ."Text to rewrite:\n{$data['selected_text']}\n\n"
-            ."RULES:\n"
-            ."- Return ONLY the rewritten text.\n"
-            ."- Keep the same language as the original.\n"
-            ."- Keep HTML formatting if present (p, h3, ul, li, strong, em, code).\n"
-            .'- No markdown fences. No explanations. Just the rewritten text.';
-
-        $model = config('services.gemini.model', 'gemini-2.0-flash');
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
+            ."Instruction: {$data['instruction']}\n\nText to rewrite:\n{$data['selected_text']}\n\n"
+            .'RULES: Return ONLY the rewritten text. Same language. Keep HTML formatting if present. No markdown.';
 
         try {
+            $model = config('services.gemini.model', 'gemini-2.0-flash');
             $response = Http::timeout(30)->connectTimeout(10)
                 ->withHeaders(['Content-Type' => 'application/json', 'X-goog-api-key' => $apiKey])
-                ->post($url, [
+                ->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent", [
                     'contents' => [['parts' => [['text' => $prompt]]]],
                     'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 4096],
                 ]);
 
             if (! $response->successful()) {
-                $errMsg = $response->json('error.message') ?? "HTTP {$response->status()}";
-                Log::warning("AI rewrite failed: {$errMsg}");
-
-                return response()->json(['error' => "Erreur Gemini : {$errMsg}"], 500);
+                return response()->json(['error' => 'Erreur Gemini : '.($response->json('error.message') ?? $response->status())], 500);
             }
 
-            $candidates = $response->json('candidates') ?? [];
-            if (empty($candidates)) {
-                return response()->json(['error' => "L'IA n'a généré aucune réponse."], 500);
-            }
-
-            $text = $candidates[0]['content']['parts'][0]['text'] ?? '';
-            $text = trim($text);
-
-            // Strip markdown fences if AI added them
+            $text = trim($response->json('candidates.0.content.parts.0.text') ?? '');
             $text = preg_replace('/^```(?:html)?\s*\n?/m', '', $text);
             $text = preg_replace('/\n?```\s*$/m', '', $text);
-            $text = trim($text);
 
-            if (empty($text)) {
-                return response()->json(['error' => 'Réponse vide de l\'IA.'], 500);
+            if (empty(trim($text))) {
+                return response()->json(['error' => 'Réponse vide.'], 500);
             }
 
-            return response()->json(['rewritten' => $text]);
-
+            return response()->json(['rewritten' => trim($text)]);
         } catch (ConnectionException $e) {
-            Log::warning("AI rewrite connection error: {$e->getMessage()}");
-
-            return response()->json(['error' => 'Impossible de contacter le service IA. Vérifiez votre connexion.'], 500);
+            return response()->json(['error' => 'Impossible de contacter le service IA.'], 500);
         } catch (\Throwable $e) {
             Log::warning("AI rewrite error: {$e->getMessage()}");
 
-            return response()->json(['error' => 'Erreur inattendue : '.$e->getMessage()], 500);
+            return response()->json(['error' => 'Erreur : '.$e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Generate a quiz for a subchapter via AI.
+     */
+    public function generateQuiz(SubChapter $subchapter)
+    {
+        $quizData = $this->flashcardService->generateQuizForSubChapter($subchapter);
+
+        if (! $quizData || empty($quizData['questions'])) {
+            return back()->with('error', 'Impossible de générer le quiz. Réessayez.');
+        }
+
+        // Check if quiz already exists
+        if ($subchapter->quiz) {
+            return back()->with('error', 'Ce sous-chapitre a déjà un quiz. Supprimez-le d\'abord.');
+        }
+
+        $quiz = $subchapter->quiz()->create([
+            'title' => $quizData['title'] ?? "Quiz : {$subchapter->title}",
+            'status' => 'published',
+        ]);
+
+        foreach ($quizData['questions'] as $i => $q) {
+            $question = $quiz->questions()->create([
+                'question_text' => strip_tags($q['question'] ?? ''),
+                'order' => $i + 1,
+            ]);
+
+            foreach (($q['options'] ?? []) as $j => $opt) {
+                $question->answers()->create([
+                    'answer_text' => strip_tags($opt),
+                    'is_correct' => $j === (int) ($q['correct_index'] ?? 0),
+                ]);
+            }
+        }
+
+        return back()->with('success', 'Quiz généré avec '.count($quizData['questions']).' questions.');
     }
 }

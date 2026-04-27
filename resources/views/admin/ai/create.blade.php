@@ -80,6 +80,7 @@
                             <option value="mixed" {{ old('type', 'mixed') === 'mixed' ? 'selected' : '' }}>Cours + Quiz</option>
                             <option value="course" {{ old('type') === 'course' ? 'selected' : '' }}>Cours uniquement</option>
                             <option value="quiz" {{ old('type') === 'quiz' ? 'selected' : '' }}>Quiz uniquement</option>
+                            <option value="full" {{ old('type') === 'full' ? 'selected' : '' }}>Cours + Quiz + Flashcards</option>
                         </select>
                     </div>
                     <div>

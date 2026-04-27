@@ -3,8 +3,8 @@
 /**
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
  *
- * Student subchapter editing - students can edit content of formations
- * they created via AI validation (enrollment check enforced).
+ * Student subchapter editing - students can ONLY edit formations they created
+ * (via AI validation). Cannot edit admin-created formations.
  */
 
 namespace App\Http\Controllers\Student;
@@ -18,18 +18,25 @@ use Illuminate\Http\Request;
 class SubChapterController extends Controller
 {
     /**
-     * Check that student is enrolled in the formation owning this subchapter.
+     * Authorize: student must be enrolled AND must be the formation creator.
      */
-    private function authorizeAccess(SubChapter $subchapter): Formation
+    private function authorizeOwnership(SubChapter $subchapter): Formation
     {
         $formation = $subchapter->chapter?->formation;
         if (! $formation) {
             abort(404);
         }
 
-        $enrolled = $formation->students()->where('user_id', auth()->id())->exists();
-        if (! $enrolled) {
+        $user = auth()->user();
+
+        // Must be enrolled
+        if (! $formation->students()->where('user_id', $user->id)->exists()) {
             abort(403, 'Vous n\'êtes pas inscrit à cette formation.');
+        }
+
+        // Must be the creator (only edit own AI-generated formations)
+        if (! $formation->isOwnedBy($user)) {
+            abort(403, 'Vous ne pouvez modifier que vos propres formations.');
         }
 
         return $formation;
@@ -37,7 +44,7 @@ class SubChapterController extends Controller
 
     public function edit(SubChapter $subchapter)
     {
-        $formation = $this->authorizeAccess($subchapter);
+        $formation = $this->authorizeOwnership($subchapter);
         $subchapter->load('chapter');
 
         return view('student.formations.edit-subchapter', compact('subchapter', 'formation'));
@@ -45,7 +52,7 @@ class SubChapterController extends Controller
 
     public function update(Request $request, SubChapter $subchapter)
     {
-        $this->authorizeAccess($subchapter);
+        $formation = $this->authorizeOwnership($subchapter);
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -56,8 +63,6 @@ class SubChapterController extends Controller
             'title' => strip_tags($data['title']),
             'content' => ContentSanitizer::render($data['content'] ?? ''),
         ]);
-
-        $formation = $subchapter->chapter->formation;
 
         return redirect()->route('student.formations.subchapter', [$formation, $subchapter])
             ->with('success', 'Contenu mis à jour.');
