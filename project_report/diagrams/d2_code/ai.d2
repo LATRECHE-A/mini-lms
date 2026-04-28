@@ -1,0 +1,57 @@
+direction: down
+
+prompt: "User prompt + params\nN chapters  depth  type  files  voice  URLs" {
+  shape: document
+  style.fill: "#dbe4ff"
+}
+extract: "UrlContentExtractorService\nReadability.php -> Google grounding fallback" {
+  style.fill: "#fef3c7"
+}
+upload: "GeminiFileUploadService\nPDF / DOCX / PPTX / image -> Files API" {
+  style.fill: "#fef3c7"
+}
+build: "AIContentService::buildPrompt()\nN repeated 4x  JSON schema  temp 0.2" {
+  style.fill: "#fef3c7"
+}
+gemini: "Gemini API\n2.0-flash -> 1.5-flash -> 1.5-pro" {
+  style.fill: "#dbe4ff"
+  style.stroke: "#4263eb"
+}
+repair: "repairChapterCount()\ntrim if > N" {
+  style.fill: "#fef3c7"
+}
+parse: "AIContentParserService\nJSON -> PHP structure" {
+  style.fill: "#fef3c7"
+}
+store: "ai_generations\ntype in {course, quiz, mixed, full}\nstatus = draft" {
+  shape: cylinder
+  style.fill: "#dcfce7"
+}
+edit: "User edits in UI\n(rewrite, add, remove)" {
+  shape: oval
+  style.fill: "#dbe4ff"
+}
+action: "Admin: import -> official Formation\nStudent: validate -> personal Formation\n(created_by + auto-enroll)" {
+  style.fill: "#fef3c7"
+}
+enrich: "Per chapter / sub-chapter:\nImageEnrichmentService\nSourceFinderService\nMermaid passthrough" {
+  style.fill: "#fef3c7"
+}
+formation: "Formation + Chapters + SubChapters\n+ Quizzes (mixed | full)\n+ Flashcards (full)" {
+  shape: document
+  style.fill: "#dcfce7"
+  style.stroke: "#0ca678"
+}
+
+prompt -> extract
+prompt -> upload
+extract -> build
+upload -> build
+build -> gemini
+gemini -> repair
+repair -> parse
+parse -> store
+store -> edit
+edit -> action
+action -> enrich
+enrich -> formation

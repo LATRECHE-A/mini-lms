@@ -1,4 +1,4 @@
-{{-- resources/views/student/formations/edit-subchapter.blade.php --}}
+{{-- File: resources/views/student/formations/edit-subchapter.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
@@ -12,6 +12,7 @@
             {{ $formation->name }} → {{ $subchapter->chapter->title }}
         </a>
         <h1 class="text-2xl font-bold text-slate-900">Modifier « {{ $subchapter->title }} »</h1>
+        <p class="text-sm text-slate-500 mt-1">Vous éditez votre propre formation. Les modifications sont enregistrées immédiatement.</p>
     </div>
 
     <form method="POST" action="{{ route('student.subchapters.update', $subchapter) }}" @submit="beforeSubmit()">
@@ -21,7 +22,8 @@
             <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-5">
                 <div>
                     <label for="title" class="block text-sm font-medium text-slate-700 mb-1.5">Titre</label>
-                    <input type="text" id="title" name="title" value="{{ old('title', $subchapter->title) }}" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <input type="text" id="title" name="title" value="{{ old('title', $subchapter->title) }}" required
+                           class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                     @error('title')<p class="mt-1 text-sm text-rose-600">{{ $message }}</p>@enderror
                 </div>
 
@@ -49,14 +51,24 @@ function studentEditor() {
             this.$nextTick(() => {
                 this.quill = new Quill('#quill-editor', {
                     theme: 'snow',
-                    modules: { toolbar: [[{header:[3,4,false]}],['bold','italic','underline'],[{list:'ordered'},{list:'bullet'}],['link'],['clean']] },
+                    modules: {
+                        toolbar: [
+                            [{ header: [3, 4, false] }],
+                            ['bold', 'italic', 'underline'],
+                            [{ list: 'ordered' }, { list: 'bullet' }],
+                            ['link'],
+                            ['clean'],
+                        ],
+                    },
                     placeholder: 'Rédigez le contenu...',
                 });
                 const existing = @json(old('content', $subchapter->content ?? ''));
                 if (existing) this.quill.root.innerHTML = existing;
             });
         },
-        beforeSubmit() { if (this.quill) this.$refs.contentInput.value = this.quill.root.innerHTML; },
+        beforeSubmit() {
+            if (this.quill) this.$refs.contentInput.value = this.quill.root.innerHTML;
+        },
     };
 }
 </script>

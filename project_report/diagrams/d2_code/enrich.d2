@@ -1,0 +1,56 @@
+direction: right
+
+content: "AI-generated\nsubchapter" {
+  shape: document
+  style.fill: "#dbe4ff"
+}
+
+img: "Image enrichment" {
+  style.fill: "#fef9e7"
+
+  query: "image_query (AI)"
+  wikimedia: "WikimediaImageService\n(CC / Public Domain)" {
+    style.fill: "#dcfce7"
+    style.stroke: "#0ca678"
+  }
+  pexels: "PexelsImageService\n(landscape fallback)" {
+    style.fill: "#fef3c7"
+    style.stroke: "#d97706"
+  }
+  out_img: "image_url\nimage_credit" {
+    shape: cylinder
+  }
+
+  query -> wikimedia
+  wikimedia -> out_img: match
+  wikimedia -> pexels: "no match"
+  pexels -> out_img
+}
+
+src: "Source enrichment" {
+  style.fill: "#fef9e7"
+
+  ai_src: "suggested_sources (AI)"
+  validate: "HEAD validation"
+  wiki: "Wikipedia API fallback" {
+    style.fill: "#fef3c7"
+    style.stroke: "#d97706"
+  }
+  out_src: "sources JSON" {
+    shape: cylinder
+  }
+
+  ai_src -> validate
+  validate -> out_src: valid
+  validate -> wiki: "all dead"
+  wiki -> out_src
+}
+
+mermaid: "Mermaid passthrough\n(AI-generated code)" {
+  style.fill: "#dcfce7"
+  style.stroke: "#0ca678"
+}
+
+content -> img
+content -> src
+content -> mermaid

@@ -1,0 +1,51 @@
+direction: down
+
+admin: "Admin generates / creates a flashcard" {
+  shape: oval
+  style.fill: "#dbe4ff"
+}
+svc_gen: "FlashcardService::generateFromSubChapter()" {
+  style.fill: "#fef3c7"
+}
+template: "Template card\nis_template = true" {
+  style.fill: "#fef3c7"
+  style.stroke: "#d97706"
+}
+admin_personal: "Admin personal copy\nis_template = false\n(invariant 1:1 with template)" {
+  style.fill: "#dcfce7"
+  style.stroke: "#0ca678"
+}
+
+enrol: "Student enrolled to formation" {
+  shape: oval
+  style.fill: "#dbe4ff"
+}
+clone: "FlashcardService::cloneTemplatesForStudent()\n(idempotent, dedupe by question)" {
+  style.fill: "#fef3c7"
+}
+student_personal: "Student personal copies\nSM-2 fields per card" {
+  style.fill: "#dcfce7"
+  style.stroke: "#0ca678"
+}
+
+study: "POST /flashcards/{id}/review\nquality in [0..5]" {
+  shape: oval
+}
+policy: "FlashcardPolicy::review\nuser_id == auth()->id()\nis_template == false" {
+  shape: hexagon
+  style.fill: "#fee2e2"
+}
+sm2: "SM-2 update\nease_factor, interval_days,\nnext_review_at, review_count\n(capped 180 days)" {
+  style.fill: "#fef3c7"
+}
+
+admin -> svc_gen
+svc_gen -> template
+svc_gen -> admin_personal: "auto-mirror"
+template -> clone: "source"
+enrol -> clone
+clone -> student_personal
+admin_personal -> study
+student_personal -> study
+study -> policy: authorize
+policy -> sm2

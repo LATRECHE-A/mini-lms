@@ -3,7 +3,12 @@
 /**
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
  *
- * Admin AI Controller - generation, editing, import (with created_by), AI rewrite, quiz generation.
+ * Admin AI controller - generate, edit, import (with created_by + tracking),
+ * AI rewrite, and per-sub-chapter quiz generation.
+ *
+ * Import is idempotent: a second click on Import returns to the existing
+ * formation instead of creating a duplicate. This matches the student's
+ * validate flow.
  */
 
 namespace App\Http\Controllers\Admin;
@@ -21,6 +26,7 @@ use App\Services\GeminiFileUploadService;
 use App\Services\UrlContentExtractorService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -65,7 +71,6 @@ class AIController extends Controller
             $urlResult = $this->urlExtractor->extractFromPrompt($request->prompt);
             $useGrounding = ! empty($urlResult['failed_urls']) && empty($urlResult['contexts']);
 
-            // 'full' type generates as 'mixed' (content+quiz) — flashcards added at import
             $aiType = $request->type === 'full' ? 'mixed' : $request->type;
 
             $generation = $this->aiService->generate(
@@ -79,7 +84,6 @@ class AIController extends Controller
                 useGrounding: $useGrounding,
             );
 
-            // Store original type for import
             if ($request->type === 'full') {
                 $generation->update(['type' => 'full']);
             }
@@ -104,6 +108,13 @@ class AIController extends Controller
     public function edit(AiGeneration $generation)
     {
         Gate::authorize('update', $generation);
+
+        if ($generation->hasFormation()) {
+            return redirect()
+                ->route('admin.formations.show', $generation->formation_id)
+                ->with('info', 'Cette génération a déjà été importée. Modifiez la formation directement.');
+        }
+
         $parsed = $this->parser->parse($generation->generated_content);
 
         return view('admin.ai.edit', compact('generation', 'parsed'));
@@ -112,6 +123,12 @@ class AIController extends Controller
     public function update(Request $request, AiGeneration $generation)
     {
         Gate::authorize('update', $generation);
+
+        if ($generation->hasFormation()) {
+            return redirect()->route('admin.ai.show', $generation)
+                ->with('error', 'Génération déjà importée — modifiez la formation.');
+        }
+
         $v = $request->validate([
             'chapter_title' => ['required', 'string', 'max:255'],
             'subchapters' => ['nullable', 'array'],
@@ -127,13 +144,20 @@ class AIController extends Controller
 
         $structure = ['chapter_title' => strip_tags($v['chapter_title']), 'subchapters' => [], 'quiz' => null];
         foreach (($v['subchapters'] ?? []) as $sub) {
-            $structure['subchapters'][] = ['title' => strip_tags($sub['title']), 'content' => ContentSanitizer::render($sub['content'])];
+            $structure['subchapters'][] = [
+                'title' => strip_tags($sub['title']),
+                'content' => ContentSanitizer::render($sub['content']),
+            ];
         }
         if (! empty($v['quiz_title']) && ! empty($v['questions'])) {
             $qs = [];
             foreach ($v['questions'] as $q) {
                 $opts = array_map('strip_tags', $q['options']);
-                $qs[] = ['question' => strip_tags($q['question']), 'options' => $opts, 'correct_index' => max(0, min((int) $q['correct_index'], count($opts) - 1))];
+                $qs[] = [
+                    'question' => strip_tags($q['question']),
+                    'options' => $opts,
+                    'correct_index' => max(0, min((int) $q['correct_index'], count($opts) - 1)),
+                ];
             }
             $structure['quiz'] = ['title' => strip_tags($v['quiz_title']), 'questions' => $qs];
         }
@@ -145,35 +169,65 @@ class AIController extends Controller
     public function import(Request $request, AiGeneration $generation)
     {
         Gate::authorize('import', $generation);
+
+        // Already imported -> redirect, do NOT re-import.
+        if ($generation->hasFormation()) {
+            return redirect()
+                ->route('admin.formations.show', $generation->formation_id)
+                ->with('info', 'Cette génération est déjà importée.');
+        }
+
         $request->validate([
             'formation_name' => ['nullable', 'string', 'max:255'],
             'level' => ['required', 'in:débutant,intermédiaire,avancé'],
             'status' => ['required', 'in:draft,published'],
         ]);
+
         try {
-            $generateFlashcards = $generation->type === 'full';
+            $formation = DB::transaction(function () use ($generation, $request) {
+                $generateFlashcards = $generation->type === 'full';
 
-            $formation = $this->importer->importAsFormation(
-                $generation->generated_content,
-                auth()->user(),
-                $request->formation_name ?: null,
-                $request->level,
-                $request->status,
-                $generateFlashcards,
-            );
-            $generation->update(['status' => 'published']);
+                $formation = $this->importer->importAsFormation(
+                    $generation->generated_content,
+                    auth()->user(),
+                    $request->formation_name ?: null,
+                    $request->level,
+                    $request->status,
+                    $generateFlashcards,
+                );
 
-            return redirect()->route('admin.formations.show', $formation)->with('success', 'Formation « '.$formation->name.' » créée.');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Erreur : '.$e->getMessage());
+                $generation->update([
+                    'status' => 'published',
+                    'formation_id' => $formation->id,
+                ]);
+
+                return $formation;
+            });
+
+            return redirect()->route('admin.formations.show', $formation)
+                ->with('success', 'Formation « '.$formation->name.' » créée.');
+        } catch (\Throwable $e) {
+            Log::error("Admin AI import failed: {$e->getMessage()}", ['generation_id' => $generation->id]);
+
+            return back()->with('error', 'Erreur lors de l\'import : '.$e->getMessage());
         }
     }
 
     public function regenerate(AiGeneration $generation)
     {
         Gate::authorize('regenerate', $generation);
+
+        if ($generation->hasFormation()) {
+            return back()->with('error', 'Cette génération est déjà importée et ne peut plus être régénérée.');
+        }
+
         try {
-            $new = $this->aiService->generate(auth()->user(), $generation->prompt, $generation->type);
+            $regenType = $generation->type === 'full' ? 'mixed' : $generation->type;
+            $new = $this->aiService->generate(auth()->user(), $generation->prompt, $regenType);
+
+            if ($generation->type === 'full') {
+                $new->update(['type' => 'full']);
+            }
 
             return redirect()->route('admin.ai.show', $new)->with('success', 'Régénéré.');
         } catch (\Exception $e) {
@@ -181,17 +235,26 @@ class AIController extends Controller
         }
     }
 
+    /**
+     * Delete the AI generation row only. The Formation it produced (if
+     * any) is preserved — the admin can delete it separately from the
+     * formations UI. Same principle as the student flow.
+     */
     public function destroy(AiGeneration $generation)
     {
         Gate::authorize('delete', $generation);
+
+        $hadFormation = $generation->hasFormation();
         $generation->delete();
 
-        return redirect()->route('admin.ai.index')->with('success', 'Supprimé.');
+        $msg = $hadFormation
+            ? 'Génération supprimée. La formation reste disponible.'
+            : 'Génération supprimée.';
+
+        return redirect()->route('admin.ai.index')->with('success', $msg);
     }
 
-    /**
-     * AI partial rewrite — AJAX.
-     */
+    /** AI partial rewrite — AJAX. */
     public function rewrite(Request $request)
     {
         $data = $request->validate([
@@ -199,8 +262,8 @@ class AIController extends Controller
             'instruction' => ['required', 'string', 'min:3', 'max:500'],
         ]);
 
-        $apiKey = trim(config('services.gemini.api_key', ''));
-        if (empty($apiKey)) {
+        $apiKey = trim((string) config('services.gemini.api_key', ''));
+        if ($apiKey === '') {
             return response()->json(['error' => 'Service IA non configuré.'], 422);
         }
 
@@ -225,7 +288,7 @@ class AIController extends Controller
             $text = preg_replace('/^```(?:html)?\s*\n?/m', '', $text);
             $text = preg_replace('/\n?```\s*$/m', '', $text);
 
-            if (empty(trim($text))) {
+            if (trim($text) === '') {
                 return response()->json(['error' => 'Réponse vide.'], 500);
             }
 
@@ -239,20 +302,15 @@ class AIController extends Controller
         }
     }
 
-    /**
-     * Generate a quiz for a subchapter via AI.
-     */
     public function generateQuiz(SubChapter $subchapter)
     {
-        $quizData = $this->flashcardService->generateQuizForSubChapter($subchapter);
-
-        if (! $quizData || empty($quizData['questions'])) {
-            return back()->with('error', 'Impossible de générer le quiz. Réessayez.');
-        }
-
-        // Check if quiz already exists
         if ($subchapter->quiz) {
             return back()->with('error', 'Ce sous-chapitre a déjà un quiz. Supprimez-le d\'abord.');
+        }
+
+        $quizData = $this->flashcardService->generateQuizForSubChapter($subchapter);
+        if (! $quizData || empty($quizData['questions'])) {
+            return back()->with('error', 'Impossible de générer le quiz. Réessayez.');
         }
 
         $quiz = $subchapter->quiz()->create([

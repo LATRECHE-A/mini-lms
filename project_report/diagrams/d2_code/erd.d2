@@ -1,0 +1,112 @@
+direction: right
+
+users: {
+  shape: sql_table
+  id: PK
+  email: unique
+  role: "admin | apprenant"
+  password: hashed
+}
+formations: {
+  shape: sql_table
+  id: PK
+  name: varchar
+  level: enum
+  status: "draft | published"
+  created_by: "FK users.id"
+  deleted_at: softdel
+}
+formation_user: {
+  shape: sql_table
+  formation_id: FK
+  user_id: FK
+  enrolled_at: ts
+}
+chapters: {
+  shape: sql_table
+  id: PK
+  formation_id: FK
+  title: varchar
+  order: int
+  image_url: varchar
+  sources: json
+  mermaid_code: text
+}
+sub_chapters: {
+  shape: sql_table
+  id: PK
+  chapter_id: FK
+  title: varchar
+  content: longtext
+  image_url: varchar
+  sources: json
+  mermaid_code: text
+}
+quizzes: {
+  shape: sql_table
+  id: PK
+  sub_chapter_id: "FK 1:1"
+  title: varchar
+}
+questions: {
+  shape: sql_table
+  id: PK
+  quiz_id: FK
+  question_text: text
+  order: int
+}
+answers: {
+  shape: sql_table
+  id: PK
+  question_id: FK
+  answer_text: text
+  is_correct: bool
+}
+quiz_attempts: {
+  shape: sql_table
+  user_id: FK
+  quiz_id: FK
+  score: int
+  answers_given: json
+}
+flashcards: {
+  shape: sql_table
+  id: PK
+  user_id: FK
+  sub_chapter_id: FK
+  is_template: bool
+  question: text
+  answer: text
+  ease_factor: decimal
+  interval_days: int
+  next_review_at: ts
+  review_count: int
+}
+ai_generations: {
+  shape: sql_table
+  id: PK
+  user_id: FK
+  prompt: text
+  generated_content: longtext
+  type: "course | quiz | mixed | full"
+  status: "draft | published | validated"
+}
+aux: "notes (/20)  personal_notes  todos  activity_logs" {
+  shape: package
+  style.fill: "#f1f5f9"
+}
+
+users -> formations: "1:N created_by"
+users -> formation_user
+formations -> formation_user
+formations -> chapters: "1:N"
+chapters -> sub_chapters: "1:N"
+sub_chapters -> quizzes: "1:1"
+quizzes -> questions: "1:N"
+questions -> answers: "1:N"
+users -> quiz_attempts
+quizzes -> quiz_attempts
+users -> flashcards
+sub_chapters -> flashcards
+users -> ai_generations
+users -> aux

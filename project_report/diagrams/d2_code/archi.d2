@@ -1,0 +1,47 @@
+direction: down
+
+req: "HTTP Request" {
+  shape: oval
+  style.fill: "#f1f5f9"
+}
+routes: "routes/web.php\n(role-prefixed groups)" {
+  style.fill: "#e2e8f0"
+}
+mw: "Auth + RoleMiddleware\nwrong role -> own dashboard" {
+  style.fill: "#dbe4ff"
+  style.stroke: "#4263eb"
+}
+fr: "FormRequest\nrules() + authorize()" {
+  style.fill: "#dbe4ff"
+  style.stroke: "#4263eb"
+}
+ctrl: "Controller (thin)\n10 Admin / 9 Student" {
+  style.fill: "#dbe4ff"
+  style.stroke: "#4263eb"
+}
+svc: "Services (13)\nAIContent  Flashcard  Image  Source  Quiz  ..." {
+  style.fill: "#fef3c7"
+  style.stroke: "#d97706"
+}
+pol: "Policies (6)\nFormation  SubChapter  Flashcard  Quiz  Note  AiGeneration" {
+  shape: hexagon
+  style.fill: "#fef3c7"
+  style.stroke: "#d97706"
+}
+mdl: "Models (14)" {
+  style.fill: "#dcfce7"
+  style.stroke: "#0ca678"
+}
+db: "MySQL / SQLite" {
+  shape: cylinder
+  style.fill: "#dcfce7"
+}
+err: "layouts.error\n403 / 404 / 500\n(no sidebar)" {
+  shape: document
+  style.fill: "#fee2e2"
+}
+
+req -> routes -> mw -> fr -> ctrl -> svc -> mdl -> db
+ctrl -> pol: "Gate::authorize"
+fr -> pol: "authorize()"
+pol -> err: "deny"

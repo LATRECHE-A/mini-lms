@@ -3,7 +3,13 @@
 /**
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
  *
- * Controller for handling user auth actions: login, registration, and logout.
+ * Auth controller - login, register, logout.
+ *
+ * Login redirection rule: redirect strictly by role and never honour the
+ * stored "intended" URL. This prevents the well-known cross-role bug where
+ * an Admin's session expires on /admin/..., a Student then logs in, and
+ * `redirect()->intended()` would otherwise drop the student onto the admin
+ * URL - triggering a 403 inside the admin layout.
  */
 
 namespace App\Http\Controllers;
@@ -28,17 +34,20 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
-
-            return $request->user()->isAdmin()
-                ? redirect()->intended(route('admin.dashboard'))
-                : redirect()->intended(route('student.dashboard'));
+        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+            return back()
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => 'Identifiants incorrects.']);
         }
 
-        return back()
-            ->withInput($request->only('email'))
-            ->withErrors(['email' => 'Identifiants incorrects.']);
+        // Fresh session id, fresh CSRF - avoid any pre-login fixation.
+        $request->session()->regenerate();
+
+        // Drop any pre-login intended URL. We always route by role so a
+        // student can never be redirected to an admin URL (and vice versa).
+        $request->session()->forget('url.intended');
+
+        return $this->redirectByRole($request->user());
     }
 
     public function showRegister()
@@ -62,6 +71,8 @@ class AuthController extends Controller
         ]);
 
         Auth::login($user);
+        $request->session()->regenerate();
+        $request->session()->forget('url.intended');
 
         return redirect()->route('student.dashboard');
     }
@@ -73,5 +84,12 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login');
+    }
+
+    private function redirectByRole(User $user)
+    {
+        return $user->isAdmin()
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('student.dashboard');
     }
 }

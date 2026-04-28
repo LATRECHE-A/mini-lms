@@ -3,7 +3,15 @@
 /**
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
  *
- * FlashcardService: SM-2 algorithm, AI generation (flashcards + quizzes), template cloning.
+ * FlashcardService - SM-2 review, stats, AI generation, template cloning,
+ * and the admin-personal-copy guarantee.
+ *
+ * The "admin can study" guarantee:
+ *   For every template owned by an admin, that admin also has a personal
+ *   copy with the same question/answer in the same sub-chapter.
+ *   `ensurePersonalCopiesForAdmin()` brings any admin's deck up to that
+ *   invariant idempotently and is called from every entry point that
+ *   could change it (study, store, update, generate, destroy).
  */
 
 namespace App\Services;
@@ -12,19 +20,20 @@ use App\Models\Flashcard;
 use App\Models\Formation;
 use App\Models\SubChapter;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class FlashcardService
 {
     /**
-     * SM-2 spaced repetition review.
+     * SM-2 spaced-repetition review.
      */
     public function review(Flashcard $card, int $quality): Flashcard
     {
         $quality = max(0, min(5, $quality));
 
-        $ef = $card->ease_factor + (0.1 - (5 - $quality) * (0.08 + (5 - $quality) * 0.02));
+        $ef = (float) $card->ease_factor + (0.1 - (5 - $quality) * (0.08 + (5 - $quality) * 0.02));
         $ef = max(1.3, $ef);
 
         if ($quality < 3) {
@@ -39,20 +48,27 @@ class FlashcardService
             $difficulty = $quality >= 5 ? 1 : ($quality >= 4 ? 2 : 3);
         }
 
+        $interval = min($interval, 180);
+
         $card->update([
             'ease_factor' => $ef,
-            'interval_days' => min($interval, 180),
+            'interval_days' => $interval,
             'difficulty' => $difficulty,
             'review_count' => $card->review_count + 1,
             'last_reviewed_at' => now(),
-            'next_review_at' => now()->addDays(min($interval, 180)),
+            'next_review_at' => now()->addDays($interval),
         ]);
 
         return $card;
     }
 
-    public function getDueCards(User $user, ?int $formationId = null, ?int $subChapterId = null, int $limit = 20)
+    public function getDueCards(User $user, ?int $formationId = null, ?int $subChapterId = null, int $limit = 20): Collection
     {
+        // Make sure admin has personal copies before pulling due cards.
+        if ($user->isAdmin()) {
+            $this->ensurePersonalCopiesForAdmin($user, $formationId, $subChapterId);
+        }
+
         $query = Flashcard::dueForReview($user->id)->with('subChapter.chapter');
 
         if ($subChapterId) {
@@ -66,7 +82,11 @@ class FlashcardService
 
     public function getStats(User $user, ?int $formationId = null): array
     {
-        $base = Flashcard::byUser($user->id)->personal();
+        if ($user->isAdmin()) {
+            $this->ensurePersonalCopiesForAdmin($user, $formationId);
+        }
+
+        $base = Flashcard::query()->byUser($user->id)->personal();
         if ($formationId) {
             $base = $base->forFormation($formationId);
         }
@@ -81,7 +101,8 @@ class FlashcardService
     }
 
     /**
-     * Clone template flashcards to a student on enrollment.
+     * Clone admin templates to a student on enrollment. Idempotent
+     * (skips question collisions for that student in the same sub-chapter).
      */
     public function cloneTemplatesForStudent(Formation $formation, User $student): int
     {
@@ -91,7 +112,7 @@ class FlashcardService
 
         $cloned = 0;
         foreach ($templates as $tpl) {
-            $exists = Flashcard::byUser($student->id)
+            $exists = Flashcard::query()->byUser($student->id)
                 ->forSubChapter($tpl->sub_chapter_id)
                 ->where('question', $tpl->question)
                 ->exists();
@@ -111,7 +132,7 @@ class FlashcardService
         }
 
         if ($cloned > 0) {
-            Log::info("Cloned {$cloned} flashcards for student {$student->id}");
+            Log::info("Cloned {$cloned} flashcards for student {$student->id} on formation {$formation->id}");
         }
 
         return $cloned;
@@ -119,7 +140,7 @@ class FlashcardService
 
     public function removeStudentCards(Formation $formation, User $student): int
     {
-        return Flashcard::byUser($student->id)
+        return Flashcard::query()->byUser($student->id)
             ->forFormation($formation->id)
             ->personal()
             ->where('review_count', 0)
@@ -127,12 +148,113 @@ class FlashcardService
     }
 
     /**
-     * Generate flashcards from a subchapter via AI.
-     * Admin gets BOTH templates (for distribution) AND personal copies (for studying).
+     * For an admin: every template they own should have a corresponding
+     * personal copy by the same admin. This makes "Study" reliable for
+     * admins regardless of how the template was created.
+     */
+    public function ensurePersonalCopiesForAdmin(User $admin, ?int $formationId = null, ?int $subChapterId = null): int
+    {
+        if (! $admin->isAdmin()) {
+            return 0;
+        }
+
+        $templatesQuery = Flashcard::query()
+            ->byUser($admin->id)
+            ->templates();
+
+        if ($subChapterId) {
+            $templatesQuery->forSubChapter($subChapterId);
+        } elseif ($formationId) {
+            $templatesQuery->forFormation($formationId);
+        }
+
+        $templates = $templatesQuery->get();
+        if ($templates->isEmpty()) {
+            return 0;
+        }
+
+        // Pre-fetch existing personal copies in one query.
+        $existing = Flashcard::query()
+            ->byUser($admin->id)
+            ->personal()
+            ->whereIn('sub_chapter_id', $templates->pluck('sub_chapter_id')->unique())
+            ->get(['sub_chapter_id', 'question'])
+            ->groupBy('sub_chapter_id')
+            ->map(fn ($g) => $g->pluck('question')->all());
+
+        $created = 0;
+        foreach ($templates as $tpl) {
+            $taken = $existing[$tpl->sub_chapter_id] ?? [];
+            if (in_array($tpl->question, $taken, true)) {
+                continue;
+            }
+
+            Flashcard::create([
+                'user_id' => $admin->id,
+                'sub_chapter_id' => $tpl->sub_chapter_id,
+                'question' => $tpl->question,
+                'answer' => $tpl->answer,
+                'is_template' => false,
+            ]);
+            $created++;
+        }
+
+        return $created;
+    }
+
+    /**
+     * After an admin updates a template, mirror the new question/answer
+     * onto their personal copy (matched by previous question). Keeps
+     * admin's study deck in sync.
+     */
+    public function syncAdminPersonalAfterTemplateChange(User $admin, Flashcard $template, string $oldQuestion): void
+    {
+        if (! $admin->isAdmin() || ! $template->is_template) {
+            return;
+        }
+
+        Flashcard::query()
+            ->byUser($admin->id)
+            ->personal()
+            ->forSubChapter($template->sub_chapter_id)
+            ->where('question', $oldQuestion)
+            ->update([
+                'question' => $template->question,
+                'answer' => $template->answer,
+            ]);
+    }
+
+    /**
+     * After an admin deletes a template, also drop their matching personal
+     * copy (templates and admin-personal copies live and die together).
+     */
+    public function removeAdminPersonalForTemplate(User $admin, Flashcard $template): int
+    {
+        if (! $admin->isAdmin() || ! $template->is_template) {
+            return 0;
+        }
+
+        return Flashcard::query()
+            ->byUser($admin->id)
+            ->personal()
+            ->forSubChapter($template->sub_chapter_id)
+            ->where('question', $template->question)
+            ->delete();
+    }
+
+    /**
+     * AI-generate flashcards from a sub-chapter.
+     *
+     * Admin: creates BOTH a template (for distribution) and a personal copy
+     * (for studying) per generated card, skipping question-duplicates.
+     * Student: creates only personal copies.
+     *
+     * Returns the personal-copy models (the studyable ones), since callers
+     * report "N flashcards generated" from a study perspective.
      */
     public function generateFromSubChapter(SubChapter $subChapter, User $user): array
     {
-        $cards = $this->callGeminiForCards($subChapter, 'flashcard');
+        $cards = $this->callGeminiForCards($subChapter);
         if (empty($cards)) {
             return [];
         }
@@ -140,15 +262,26 @@ class FlashcardService
         $isAdmin = $user->isAdmin();
         $created = [];
 
+        // Pre-load existing question signatures for de-duplication.
+        $existingPersonalQuestions = Flashcard::query()
+            ->byUser($user->id)
+            ->personal()
+            ->forSubChapter($subChapter->id)
+            ->pluck('question')
+            ->all();
+
+        $existingTemplateQuestions = $isAdmin
+            ? Flashcard::query()->byUser($user->id)->templates()->forSubChapter($subChapter->id)->pluck('question')->all()
+            : [];
+
         foreach ($cards as $c) {
-            $q = trim($c['question'] ?? '');
-            $a = trim($c['answer'] ?? '');
-            if (empty($q) || empty($a)) {
+            $q = trim((string) ($c['question'] ?? ''));
+            $a = trim((string) ($c['answer'] ?? ''));
+            if ($q === '' || $a === '') {
                 continue;
             }
 
-            if ($isAdmin) {
-                // Create template (for student distribution)
+            if ($isAdmin && ! in_array($q, $existingTemplateQuestions, true)) {
                 Flashcard::create([
                     'user_id' => $user->id,
                     'sub_chapter_id' => $subChapter->id,
@@ -156,8 +289,10 @@ class FlashcardService
                     'answer' => $a,
                     'is_template' => true,
                 ]);
+                $existingTemplateQuestions[] = $q;
+            }
 
-                // Create personal copy (so admin can study)
+            if (! in_array($q, $existingPersonalQuestions, true)) {
                 $created[] = Flashcard::create([
                     'user_id' => $user->id,
                     'sub_chapter_id' => $subChapter->id,
@@ -165,25 +300,17 @@ class FlashcardService
                     'answer' => $a,
                     'is_template' => false,
                 ]);
-            } else {
-                $created[] = Flashcard::create([
-                    'user_id' => $user->id,
-                    'sub_chapter_id' => $subChapter->id,
-                    'question' => $q,
-                    'answer' => $a,
-                    'is_template' => false,
-                ]);
+                $existingPersonalQuestions[] = $q;
             }
         }
 
-        Log::info('Generated '.count($created)." flashcards for sub_chapter {$subChapter->id}");
+        Log::info('Generated '.count($created)." personal flashcards for user {$user->id} on sub_chapter {$subChapter->id}");
 
         return $created;
     }
 
     /**
-     * Generate a quiz for a subchapter via AI (Issue #2).
-     * Returns quiz data array or null.
+     * AI quiz generator (for sub-chapters).
      */
     public function generateQuizForSubChapter(SubChapter $subChapter): ?array
     {
@@ -218,7 +345,7 @@ P;
 
     // Private Gemini helpers
 
-    private function callGeminiForCards(SubChapter $subChapter, string $type): array
+    private function callGeminiForCards(SubChapter $subChapter): array
     {
         $content = strip_tags($subChapter->content ?? '');
         if (strlen($content) < 50) {
@@ -248,8 +375,8 @@ P;
 
     private function callGeminiRaw(string $prompt): ?string
     {
-        $apiKey = trim(config('services.gemini.api_key', ''));
-        if (empty($apiKey)) {
+        $apiKey = trim((string) config('services.gemini.api_key', ''));
+        if ($apiKey === '') {
             return null;
         }
 

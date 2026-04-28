@@ -101,9 +101,21 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'role:apprenant'
     Route::get('/formations/{formation}', [Student\FormationController::class, 'show'])->name('formations.show');
     Route::get('/formations/{formation}/subchapters/{subchapter}', [Student\FormationController::class, 'showSubChapter'])->name('formations.subchapter');
 
-    // Student subchapter editing (own formations only)
+    Route::get('/formations/{formation}/edit', [Student\FormationController::class, 'edit'])->name('formations.edit');
+    Route::put('/formations/{formation}', [Student\FormationController::class, 'update'])->name('formations.update');
+    Route::delete('/formations/{formation}', [Student\FormationController::class, 'destroy'])->name('formations.destroy');
+
+    Route::get('/formations/{formation}/chapters/create', [Student\ChapterController::class, 'create'])->name('chapters.create');
+    Route::post('/formations/{formation}/chapters', [Student\ChapterController::class, 'store'])->name('chapters.store');
+    Route::get('/formations/{formation}/chapters/{chapter}/edit', [Student\ChapterController::class, 'edit'])->name('chapters.edit');
+    Route::put('/formations/{formation}/chapters/{chapter}', [Student\ChapterController::class, 'update'])->name('chapters.update');
+    Route::delete('/formations/{formation}/chapters/{chapter}', [Student\ChapterController::class, 'destroy'])->name('chapters.destroy');
+
+    Route::get('/chapters/{chapter}/subchapters/create', [Student\SubChapterController::class, 'create'])->name('subchapters.create');
+    Route::post('/chapters/{chapter}/subchapters', [Student\SubChapterController::class, 'store'])->name('subchapters.store');
     Route::get('/subchapters/{subchapter}/edit', [Student\SubChapterController::class, 'edit'])->name('subchapters.edit');
     Route::put('/subchapters/{subchapter}', [Student\SubChapterController::class, 'update'])->name('subchapters.update');
+    Route::delete('/subchapters/{subchapter}', [Student\SubChapterController::class, 'destroy'])->name('subchapters.destroy');
 
     Route::get('/quizzes', [Student\QuizController::class, 'index'])->name('quizzes.index');
     Route::get('/quizzes/{quiz}', [Student\QuizController::class, 'show'])->name('quizzes.show');
@@ -131,15 +143,19 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'role:apprenant'
     Route::post('/flashcards/{flashcard}/review', [Student\FlashcardController::class, 'review'])->name('flashcards.review');
     Route::post('/flashcards/generate/{subchapter}', [Student\FlashcardController::class, 'generate'])->name('flashcards.generate');
 
-    // AI
+    // AI — note: per-sub-chapter quiz generation is intentionally NOT
+    // exposed to students. The validate-the-generation action is named
+    // `confirm` on the controller (the route name keeps `ai.validate`
+    // for UX continuity, the URL is `/ai/{generation}/confirm`) because
+    // the framework's ValidatesRequests trait already defines a method
+    // named `validate()` - see Student\AIController::confirm().
     Route::get('/ai', [Student\AIController::class, 'index'])->name('ai.index');
     Route::get('/ai/create', [Student\AIController::class, 'create'])->name('ai.create');
     Route::post('/ai/generate', [Student\AIController::class, 'generate'])->name('ai.generate')->middleware('throttle:10,1');
     Route::get('/ai/{generation}', [Student\AIController::class, 'show'])->name('ai.show');
     Route::get('/ai/{generation}/edit', [Student\AIController::class, 'edit'])->name('ai.edit');
     Route::put('/ai/{generation}', [Student\AIController::class, 'update'])->name('ai.update');
-    Route::post('/ai/{generation}/validate', [Student\AIController::class, 'validate'])->name('ai.validate');
+    Route::post('/ai/{generation}/confirm', [Student\AIController::class, 'confirm'])->name('ai.validate');
     Route::post('/ai/{generation}/regenerate', [Student\AIController::class, 'regenerate'])->name('ai.regenerate')->middleware('throttle:10,1');
     Route::delete('/ai/{generation}', [Student\AIController::class, 'destroy'])->name('ai.destroy');
-    Route::post('/ai/generate-quiz/{subchapter}', [Student\AIController::class, 'generateQuiz'])->name('ai.generate-quiz');
 });

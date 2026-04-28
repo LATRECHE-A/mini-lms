@@ -3,12 +3,19 @@
 /**
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
  *
- * Controller for students to view their enrolled formations and access chapters and subchapters.
+ * Student formation access + editing parity.
+ *
+ * Read access (index, show, showSubChapter): published formations the
+ * student is enrolled in, OR formations the student created themselves.
+ *
+ * Write access (edit, update, destroy): only formations the student owns
+ * (created via AI workflow). Enforced uniformly by FormationPolicy.
  */
 
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\FormationRequest;
 use App\Models\Formation;
 use App\Models\SubChapter;
 
@@ -16,23 +23,34 @@ class FormationController extends Controller
 {
     public function index()
     {
-        $formations = auth()->user()->formations()
-            ->published()
+        // Show enrolled+published formations, plus any formations the
+        // student authored (drafts included, since they own them).
+        $userId = auth()->id();
+
+        $enrolled = auth()->user()->formations()
             ->withCount('chapters')
-            ->orderBy('name')
             ->get();
+
+        $authored = Formation::query()
+            ->createdBy($userId)
+            ->withCount('chapters')
+            ->get();
+
+        // Merge by id, prefer authored entry (richer status info).
+        $formations = $authored->merge(
+            $enrolled->reject(fn ($f) => $authored->contains('id', $f->id))
+        )->sortBy('name')->values();
 
         return view('student.formations.index', compact('formations'));
     }
 
     public function show(Formation $formation)
     {
-        // Authorization: student must be enrolled
-        if (!$formation->students()->where('user_id', auth()->id())->exists()) {
-            abort(403, 'Vous n\'êtes pas inscrit à cette formation.');
-        }
+        $this->authorize('view', $formation);
 
-        if ($formation->status !== 'published') {
+        // For non-owned formations, also require published status (policy
+        // already encodes this, but we double-check for clarity).
+        if (! $formation->isOwnedBy(auth()->user()) && $formation->status !== 'published') {
             abort(404);
         }
 
@@ -43,18 +61,15 @@ class FormationController extends Controller
 
     public function showSubChapter(Formation $formation, SubChapter $subchapter)
     {
-        if (!$formation->students()->where('user_id', auth()->id())->exists()) {
-            abort(403);
-        }
+        $this->authorize('view', $formation);
 
-        if ($formation->status !== 'published') {
+        if (! $formation->isOwnedBy(auth()->user()) && $formation->status !== 'published') {
             abort(404);
         }
 
-        // Eager load to avoid N+1
         $subchapter->load(['chapter.formation', 'quiz.questions']);
 
-        // Verify subchapter actually belongs to this formation (IDOR prevention)
+        // IDOR guard: subchapter must actually belong to this formation.
         if ($subchapter->chapter?->formation_id !== $formation->id) {
             abort(404);
         }
@@ -65,5 +80,33 @@ class FormationController extends Controller
             ->get();
 
         return view('student.formations.subchapter', compact('formation', 'subchapter', 'personalNotes'));
+    }
+
+    public function edit(Formation $formation)
+    {
+        $this->authorize('update', $formation);
+
+        return view('student.formations.edit', compact('formation'));
+    }
+
+    public function update(FormationRequest $request, Formation $formation)
+    {
+        // FormRequest already authorizes via FormationPolicy::update.
+        $formation->update($request->validated());
+
+        return redirect()
+            ->route('student.formations.show', $formation)
+            ->with('success', 'Formation mise à jour.');
+    }
+
+    public function destroy(Formation $formation)
+    {
+        $this->authorize('delete', $formation);
+
+        $formation->delete();
+
+        return redirect()
+            ->route('student.formations.index')
+            ->with('success', 'Formation supprimée.');
     }
 }

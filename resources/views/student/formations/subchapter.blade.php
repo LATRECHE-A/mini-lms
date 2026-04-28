@@ -1,18 +1,22 @@
-{{-- resources/views/student/formations/subchapter.blade.php --}}
+{{-- File: resources/views/student/formations/subchapter.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
+@php
+    $canEdit = auth()->user()->can('update', $subchapter);
+@endphp
+
 <div class="fade-in">
     <div class="mb-8">
         <a href="{{ route('student.formations.show', $formation) }}" class="text-sm text-slate-500 hover:text-slate-700 inline-flex items-center gap-1 mb-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
             {{ $formation->name }} → {{ $subchapter->chapter->title }}
         </a>
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h1 class="text-2xl font-bold text-slate-900">{{ $subchapter->title }}</h1>
-            {{-- Edit button only for formations created by this student --}}
-            @if($formation->isOwnedBy(auth()->user()))
-            <a href="{{ route('student.subchapters.edit', $subchapter) }}" class="text-sm text-slate-500 hover:text-brand-600 inline-flex items-center gap-1.5 border border-slate-200 rounded-lg px-3 py-1.5 hover:border-brand-300 transition-colors">
+            @if($canEdit)
+            <a href="{{ route('student.subchapters.edit', $subchapter) }}"
+               class="text-sm text-slate-600 hover:text-brand-600 inline-flex items-center gap-1.5 border border-slate-200 rounded-lg px-3 py-1.5 hover:border-brand-300 transition-colors flex-shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                 Modifier
             </a>
@@ -61,27 +65,19 @@
                 @endif
             </div>
 
-            {{-- Action buttons --}}
+            {{-- Personal study actions: flashcards only. Quiz generation
+                 was removed for students because a quiz lives 1:1 on the
+                 sub-chapter and would be visible to admin and other
+                 enrolled students. --}}
             <div class="flex flex-wrap items-center gap-3 mb-6">
-                {{-- Flashcards --}}
                 <form method="POST" action="{{ route('student.flashcards.generate', $subchapter) }}">
                     @csrf
-                    <button type="submit" class="bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 text-sm font-medium py-2.5 px-5 rounded-lg transition-colors inline-flex items-center gap-2"
-                        onclick="this.disabled=true; this.innerHTML='⚡ Génération...'; this.form.submit();">
+                    <button type="submit"
+                            class="bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 text-sm font-medium py-2.5 px-5 rounded-lg transition-colors inline-flex items-center gap-2"
+                            onclick="this.disabled=true; this.innerHTML='⚡ Génération...'; this.form.submit();">
                         ⚡ Flashcards IA
                     </button>
                 </form>
-
-                {{-- AI Quiz (only if no quiz exists) --}}
-                @if(!$subchapter->quiz)
-                <form method="POST" action="{{ route('student.ai.generate-quiz', $subchapter) }}">
-                    @csrf
-                    <button type="submit" class="bg-violet-50 hover:bg-violet-100 border border-violet-200 text-violet-700 text-sm font-medium py-2.5 px-5 rounded-lg transition-colors inline-flex items-center gap-2"
-                        onclick="this.disabled=true; this.innerHTML='🧠 Génération...'; this.form.submit();">
-                        🧠 Quiz IA
-                    </button>
-                </form>
-                @endif
 
                 <a href="{{ route('student.flashcards.subchapter', $subchapter) }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Mes flashcards →</a>
                 <a href="{{ route('student.flashcards.study', ['sub_chapter_id' => $subchapter->id]) }}" class="text-sm text-slate-500 hover:text-slate-700">Étudier →</a>

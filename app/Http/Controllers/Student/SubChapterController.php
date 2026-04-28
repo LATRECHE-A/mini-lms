@@ -3,56 +3,65 @@
 /**
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
  *
- * Student subchapter editing - students can ONLY edit formations they created
- * (via AI validation). Cannot edit admin-created formations.
+ * Student sub-chapter CRUD - only for sub-chapters whose parent formation
+ * the student owns. Authorization is enforced via SubChapterPolicy on
+ * every action.
  */
 
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-use App\Models\Formation;
+use App\Http\Requests\SubChapterRequest;
+use App\Models\Chapter;
 use App\Models\SubChapter;
 use App\Services\ContentSanitizer;
 use Illuminate\Http\Request;
 
 class SubChapterController extends Controller
 {
-    /**
-     * Authorize: student must be enrolled AND must be the formation creator.
-     */
-    private function authorizeOwnership(SubChapter $subchapter): Formation
+    public function create(Chapter $chapter)
     {
-        $formation = $subchapter->chapter?->formation;
+        $chapter->load('formation');
+        $formation = $chapter->formation;
         if (! $formation) {
             abort(404);
         }
+        $this->authorize('update', $formation);
 
-        $user = auth()->user();
+        $nextOrder = $chapter->subChapters()->max('order') + 1;
 
-        // Must be enrolled
-        if (! $formation->students()->where('user_id', $user->id)->exists()) {
-            abort(403, 'Vous n\'êtes pas inscrit à cette formation.');
-        }
+        return view('student.subchapters.create', compact('chapter', 'formation', 'nextOrder'));
+    }
 
-        // Must be the creator (only edit own AI-generated formations)
-        if (! $formation->isOwnedBy($user)) {
-            abort(403, 'Vous ne pouvez modifier que vos propres formations.');
-        }
+    public function store(SubChapterRequest $request, Chapter $chapter)
+    {
+        // FormRequest authorizes via FormationPolicy on the chapter's parent.
+        $data = $request->validated();
+        $data['order'] = $data['order'] ?? ($chapter->subChapters()->max('order') + 1);
 
-        return $formation;
+        $chapter->subChapters()->create($data);
+
+        return redirect()
+            ->route('student.formations.show', $chapter->formation_id)
+            ->with('success', 'Sous-chapitre ajouté.');
     }
 
     public function edit(SubChapter $subchapter)
     {
-        $formation = $this->authorizeOwnership($subchapter);
-        $subchapter->load('chapter');
+        $this->authorize('update', $subchapter);
+
+        $subchapter->load('chapter.formation');
+        $formation = $subchapter->chapter->formation;
 
         return view('student.formations.edit-subchapter', compact('subchapter', 'formation'));
     }
 
     public function update(Request $request, SubChapter $subchapter)
     {
-        $formation = $this->authorizeOwnership($subchapter);
+        $this->authorize('update', $subchapter);
+
+        $subchapter->load('chapter.formation');
+        $formation = $subchapter->chapter->formation;
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -64,7 +73,21 @@ class SubChapterController extends Controller
             'content' => ContentSanitizer::render($data['content'] ?? ''),
         ]);
 
-        return redirect()->route('student.formations.subchapter', [$formation, $subchapter])
+        return redirect()
+            ->route('student.formations.subchapter', [$formation, $subchapter])
             ->with('success', 'Contenu mis à jour.');
+    }
+
+    public function destroy(SubChapter $subchapter)
+    {
+        $this->authorize('delete', $subchapter);
+
+        $subchapter->load('chapter.formation');
+        $formation = $subchapter->chapter->formation;
+        $subchapter->delete();
+
+        return redirect()
+            ->route('student.formations.show', $formation)
+            ->with('success', 'Sous-chapitre supprimé.');
     }
 }

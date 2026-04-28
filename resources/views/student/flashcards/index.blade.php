@@ -1,4 +1,4 @@
-{{-- resources/views/student/flashcards/index.blade.php --}}
+{{-- File: resources/views/student/flashcards/index.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
@@ -9,7 +9,8 @@
             <p class="text-sm text-slate-500 mt-1">Révisez vos connaissances avec la répétition espacée.</p>
         </div>
         @if($stats['due'] > 0)
-        <a href="{{ route('student.flashcards.study') }}" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium py-2.5 px-5 rounded-lg transition-colors inline-flex items-center gap-2 flex-shrink-0">
+        <a href="{{ route('student.flashcards.study') }}"
+           class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium py-2.5 px-5 rounded-lg transition-colors inline-flex items-center gap-2 flex-shrink-0">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             Tout réviser ({{ $stats['due'] }})
         </a>
@@ -42,7 +43,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         @forelse($formations as $formation)
         <a href="{{ route('student.flashcards.formation', $formation) }}"
-            class="bg-white rounded-xl border border-slate-200 p-5 hover:border-brand-300 hover:shadow-sm transition-all group">
+           class="bg-white rounded-xl border border-slate-200 p-5 hover:border-brand-300 hover:shadow-sm transition-all group">
             <div class="flex items-start justify-between mb-3">
                 <h3 class="font-medium text-slate-900 group-hover:text-brand-700 transition-colors">{{ $formation->name }}</h3>
                 <svg class="w-4 h-4 text-slate-300 group-hover:text-brand-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
@@ -56,25 +57,27 @@
             </div>
             @if($formation->due_count > 0)
             <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-amber-100 text-amber-700">{{ $formation->due_count }} à réviser</span>
-            @else
+            @elseif($formation->card_count > 0)
             <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-100 text-emerald-700">À jour ✓</span>
+            @else
+            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-500">Aucune carte</span>
             @endif
         </a>
         @empty
         <div class="col-span-full bg-white rounded-xl border border-slate-200 p-8 text-center">
             <p class="text-sm text-slate-400">Vous n'êtes inscrit à aucune formation.</p>
-            <p class="text-xs text-slate-400 mt-1">Les flashcards apparaîtront ici quand vous serez inscrit.</p>
+            <p class="text-xs text-slate-400 mt-1">Les flashcards apparaîtront ici dès votre inscription.</p>
         </div>
         @endforelse
     </div>
 
-    {{-- Add personal card (not tied to any subchapter) --}}
+    {{-- Free-form personal card (no sub-chapter binding) --}}
     <div class="bg-white rounded-xl border border-slate-200 p-5" x-data="{ open: false }">
-        <button @click="open = !open" class="text-sm text-brand-600 hover:text-brand-700 font-medium inline-flex items-center gap-1">
+        <button type="button" @click="open = !open" class="text-sm text-brand-600 hover:text-brand-700 font-medium inline-flex items-center gap-1">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
             Créer une flashcard libre
         </button>
-        <form method="POST" action="{{ route('student.flashcards.store') }}" x-show="open" x-transition class="mt-4 space-y-3">
+        <form method="POST" action="{{ route('student.flashcards.store') }}" x-show="open" x-transition x-cloak class="mt-4 space-y-3">
             @csrf
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Question</label>

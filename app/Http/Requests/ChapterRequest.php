@@ -3,19 +3,37 @@
 /**
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
  *
- * Form request for validating chapter data (create/update).
- * Now includes image, sources, and mermaid diagram fields.
+ * Validates chapter create/update payloads (title, order, image, sources,
+ * mermaid). Authorized via FormationPolicy::update on the parent formation
+ * - so admins always pass and students pass for formations they own.
  */
 
 namespace App\Http\Requests;
 
+use App\Models\Chapter;
+use App\Models\Formation;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ChapterRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->isAdmin();
+        $user = $this->user();
+        if (! $user) {
+            return false;
+        }
+
+        $formation = $this->route('formation');
+        if ($formation instanceof Formation) {
+            return $user->can('update', $formation);
+        }
+
+        $chapter = $this->route('chapter');
+        if ($chapter instanceof Chapter && $chapter->formation) {
+            return $user->can('update', $chapter->formation);
+        }
+
+        return $user->isAdmin();
     }
 
     public function rules(): array
@@ -32,9 +50,6 @@ class ChapterRequest extends FormRequest
         ];
     }
 
-    /**
-     * Massage sources_json into the 'sources' array for the model.
-     */
     public function validated($key = null, $default = null): mixed
     {
         $data = parent::validated($key, $default);
@@ -43,16 +58,14 @@ class ChapterRequest extends FormRequest
             return $data;
         }
 
-        // Parse sources JSON string into array
         if (isset($data['sources_json'])) {
             $decoded = json_decode($data['sources_json'], true);
             $data['sources'] = is_array($decoded) ? $decoded : null;
             unset($data['sources_json']);
         }
 
-        // Clean empty strings to null
         foreach (['image_url', 'image_alt', 'image_credit', 'mermaid_code'] as $field) {
-            if (isset($data[$field]) && trim($data[$field]) === '') {
+            if (isset($data[$field]) && trim((string) $data[$field]) === '') {
                 $data[$field] = null;
             }
         }

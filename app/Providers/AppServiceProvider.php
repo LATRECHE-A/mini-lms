@@ -3,20 +3,23 @@
 /**
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
  *
- * AppServiceProvider is responsible for registering application services and bootstrapping any necessary components.
- * In this case, it registers authorization policies for the Formation, Quiz, Note, and AI
+ * Registers all authorization policies.
  */
 
 namespace App\Providers;
 
 use App\Models\AiGeneration;
+use App\Models\Flashcard;
 use App\Models\Formation;
 use App\Models\Note;
 use App\Models\Quiz;
+use App\Models\SubChapter;
 use App\Policies\AiGenerationPolicy;
+use App\Policies\FlashcardPolicy;
 use App\Policies\FormationPolicy;
 use App\Policies\NotePolicy;
 use App\Policies\QuizPolicy;
+use App\Policies\SubChapterPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -29,10 +32,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Register authorization policies
         Gate::policy(Formation::class, FormationPolicy::class);
+        Gate::policy(SubChapter::class, SubChapterPolicy::class);
         Gate::policy(Quiz::class, QuizPolicy::class);
         Gate::policy(Note::class, NotePolicy::class);
         Gate::policy(AiGeneration::class, AiGenerationPolicy::class);
+        Gate::policy(Flashcard::class, FlashcardPolicy::class);
     }
 }

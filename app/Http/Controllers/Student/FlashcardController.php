@@ -3,8 +3,15 @@
 /**
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
  *
- * Student flashcard controller - organized by enrolled formations.
- * Hierarchy: index (formations) -> formation (chapters/subchapters) -> subchapter (cards) -> study
+ * Student flashcards.
+ *
+ * A student only ever sees/edits their own personal flashcards. Templates
+ * authored by admins are never exposed in the student UI — they appear as
+ * cloned personal cards on enrollment.
+ *
+ * Authorization is enforced by FlashcardPolicy + per-formation enrollment
+ * checks. Generation requires the student to be enrolled in the parent
+ * formation.
  */
 
 namespace App\Http\Controllers\Student;
@@ -20,9 +27,6 @@ class FlashcardController extends Controller
 {
     public function __construct(private FlashcardService $service) {}
 
-    /**
-     * Index: enrolled formations with flashcard stats.
-     */
     public function index()
     {
         $user = auth()->user();
@@ -33,9 +37,10 @@ class FlashcardController extends Controller
             ->orderBy('name')
             ->get()
             ->map(function ($f) use ($user) {
-                $f->card_count = Flashcard::byUser($user->id)->personal()->forFormation($f->id)->count();
-                $f->due_count = Flashcard::byUser($user->id)->personal()->forFormation($f->id)
-                    ->where(fn ($q) => $q->whereNull('next_review_at')->orWhere('next_review_at', '<=', now()))->count();
+                $f->card_count = Flashcard::query()->byUser($user->id)->personal()->forFormation($f->id)->count();
+                $f->due_count = Flashcard::query()->byUser($user->id)->personal()->forFormation($f->id)
+                    ->where(fn ($q) => $q->whereNull('next_review_at')->orWhere('next_review_at', '<=', now()))
+                    ->count();
 
                 return $f;
             });
@@ -43,30 +48,23 @@ class FlashcardController extends Controller
         return view('student.flashcards.index', compact('stats', 'formations'));
     }
 
-    /**
-     * Formation detail: chapters/subchapters with card counts.
-     */
     public function formation(Formation $formation)
     {
         $user = auth()->user();
-
-        // Check enrollment
-        if (! $user->formations()->where('formation_id', $formation->id)->exists()) {
-            abort(403, 'Vous n\'êtes pas inscrit à cette formation.');
-        }
+        $this->ensureEnrolled($user, $formation);
 
         $formation->load(['chapters.subChapters']);
         $stats = $this->service->getStats($user, $formation->id);
 
         $subchapterIds = $formation->chapters->flatMap(fn ($ch) => $ch->subChapters->pluck('id'));
 
-        $cardCounts = Flashcard::byUser($user->id)->personal()
+        $cardCounts = Flashcard::query()->byUser($user->id)->personal()
             ->whereIn('sub_chapter_id', $subchapterIds)
             ->selectRaw('sub_chapter_id, count(*) as count')
             ->groupBy('sub_chapter_id')
             ->pluck('count', 'sub_chapter_id');
 
-        $dueCounts = Flashcard::byUser($user->id)->personal()
+        $dueCounts = Flashcard::query()->byUser($user->id)->personal()
             ->whereIn('sub_chapter_id', $subchapterIds)
             ->where(fn ($q) => $q->whereNull('next_review_at')->orWhere('next_review_at', '<=', now()))
             ->selectRaw('sub_chapter_id, count(*) as count')
@@ -76,21 +74,18 @@ class FlashcardController extends Controller
         return view('student.flashcards.formation', compact('formation', 'stats', 'cardCounts', 'dueCounts'));
     }
 
-    /**
-     * Subchapter detail: show student's cards with edit/delete + add form.
-     */
     public function subchapter(SubChapter $subchapter)
     {
         $user = auth()->user();
         $subchapter->load('chapter.formation');
 
-        // Check enrollment
-        $formationId = $subchapter->chapter->formation_id;
-        if (! $user->formations()->where('formation_id', $formationId)->exists()) {
-            abort(403);
+        $formation = $subchapter->chapter?->formation;
+        if (! $formation) {
+            abort(404);
         }
+        $this->ensureEnrolled($user, $formation);
 
-        $cards = Flashcard::byUser($user->id)->personal()
+        $cards = Flashcard::query()->byUser($user->id)->personal()
             ->forSubChapter($subchapter->id)
             ->orderBy('created_at')
             ->get();
@@ -100,40 +95,49 @@ class FlashcardController extends Controller
         return view('student.flashcards.subchapter', compact('subchapter', 'cards', 'dueCount'));
     }
 
-    /**
-     * Study mode.
-     */
     public function study(Request $request)
     {
-        $formationId = $request->query('formation_id');
-        $subChapterId = $request->query('sub_chapter_id');
-        $dueCards = $this->service->getDueCards(auth()->user(), $formationId, $subChapterId, 20);
+        $formationId = $request->query('formation_id') ? (int) $request->query('formation_id') : null;
+        $subChapterId = $request->query('sub_chapter_id') ? (int) $request->query('sub_chapter_id') : null;
+
+        $user = auth()->user();
+
+        if ($formationId) {
+            $formation = Formation::findOrFail($formationId);
+            $this->ensureEnrolled($user, $formation);
+        }
+        if ($subChapterId) {
+            $subchapter = SubChapter::with('chapter.formation')->findOrFail($subChapterId);
+            $formation = $subchapter->chapter?->formation;
+            if (! $formation) {
+                abort(404);
+            }
+            $this->ensureEnrolled($user, $formation);
+        }
+
+        $dueCards = $this->service->getDueCards($user, $formationId, $subChapterId, 20);
 
         if ($dueCards->isEmpty()) {
-            return redirect()->route('student.flashcards.index')
-                ->with('success', 'Aucune carte à réviser pour le moment !');
+            $back = $subChapterId
+                ? route('student.flashcards.subchapter', $subChapterId)
+                : ($formationId ? route('student.flashcards.formation', $formationId) : route('student.flashcards.index'));
+
+            return redirect($back)->with('info', 'Aucune carte à réviser pour le moment !');
         }
 
         return view('student.flashcards.study', compact('dueCards'));
     }
 
-    /**
-     * Review (AJAX).
-     */
     public function review(Request $request, Flashcard $flashcard)
     {
-        if ($flashcard->user_id !== auth()->id()) {
-            abort(403);
-        }
+        $this->authorize('review', $flashcard);
+
         $request->validate(['quality' => 'required|integer|min:0|max:5']);
-        $this->service->review($flashcard, (int) $request->quality);
+        $this->service->review($flashcard, (int) $request->input('quality'));
 
         return response()->json(['ok' => true]);
     }
 
-    /**
-     * Add a personal flashcard.
-     */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -141,6 +145,14 @@ class FlashcardController extends Controller
             'answer' => 'required|string|max:5000',
             'sub_chapter_id' => 'nullable|exists:sub_chapters,id',
         ]);
+
+        if (! empty($data['sub_chapter_id'])) {
+            $subchapter = SubChapter::with('chapter.formation')->findOrFail($data['sub_chapter_id']);
+            if (! $subchapter->chapter?->formation) {
+                abort(404);
+            }
+            $this->ensureEnrolled(auth()->user(), $subchapter->chapter->formation);
+        }
 
         Flashcard::create([
             'user_id' => auth()->id(),
@@ -155,9 +167,8 @@ class FlashcardController extends Controller
 
     public function update(Request $request, Flashcard $flashcard)
     {
-        if ($flashcard->user_id !== auth()->id()) {
-            abort(403);
-        }
+        $this->authorize('update', $flashcard);
+
         $flashcard->update($request->validate([
             'question' => 'required|string|max:2000',
             'answer' => 'required|string|max:5000',
@@ -168,24 +179,36 @@ class FlashcardController extends Controller
 
     public function destroy(Flashcard $flashcard)
     {
-        if ($flashcard->user_id !== auth()->id()) {
-            abort(403);
-        }
+        $this->authorize('delete', $flashcard);
+
         $flashcard->delete();
 
         return back()->with('success', 'Flashcard supprimée.');
     }
 
-    /**
-     * Generate personal flashcards from a subchapter.
-     */
     public function generate(SubChapter $subchapter)
     {
+        $subchapter->load('chapter.formation');
+        $formation = $subchapter->chapter?->formation;
+        if (! $formation) {
+            abort(404);
+        }
+        $this->ensureEnrolled(auth()->user(), $formation);
+
         $created = $this->service->generateFromSubChapter($subchapter, auth()->user());
 
         return back()->with(
             empty($created) ? 'error' : 'success',
-            empty($created) ? 'Impossible de générer. Réessayez.' : count($created).' flashcards générées.'
+            empty($created)
+                ? 'Impossible de générer des flashcards. Réessayez dans un instant.'
+                : count($created).' flashcard(s) générée(s).'
         );
+    }
+
+    private function ensureEnrolled($user, Formation $formation): void
+    {
+        if (! $formation->students()->where('user_id', $user->id)->exists()) {
+            abort(403, 'Vous n\'êtes pas inscrit à cette formation.');
+        }
     }
 }

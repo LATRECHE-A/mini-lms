@@ -1,22 +1,17 @@
-<!DOCTYPE html>
-<html lang="fr" class="h-full">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Erreur — Mini LMS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=outfit:400,600" rel="stylesheet" />
-    <style>body { font-family: 'Outfit', sans-serif; }</style>
-</head>
-<body class="h-full bg-slate-50 antialiased flex items-center justify-center">
-    <div class="text-center px-6">
-        <p class="text-6xl font-bold text-slate-200">500</p>
-        <h1 class="text-xl font-semibold text-slate-900 mt-4">Erreur interne du serveur</h1>
-        <p class="text-sm text-slate-500 mt-2 max-w-md mx-auto">Une erreur inattendue s'est produite. Veuillez réessayer ou contacter l'administrateur.</p>
-        <a href="/" class="inline-block mt-6 text-sm font-medium text-indigo-600 hover:text-indigo-700">
-            ← Retour à l'accueil
+{{-- File: resources/views/errors/500.blade.php --}}
+@extends('layouts.error', ['title' => 'Erreur serveur'])
+
+@section('content')
+    <p class="text-7xl font-bold text-rose-200 leading-none">500</p>
+    <h1 class="text-2xl font-semibold text-slate-900 mt-4">Une erreur est survenue</h1>
+    <p class="text-sm text-slate-500 mt-3">
+        Le serveur a rencontré une erreur inattendue. Veuillez réessayer dans un instant.
+    </p>
+
+    <div class="mt-8 flex items-center justify-center gap-3">
+        <a href="{{ url('/') }}"
+           class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium py-2.5 px-5 rounded-lg transition-colors">
+            Retour à l'accueil
         </a>
     </div>
-</body>
-</html>
+@endsection

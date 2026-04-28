@@ -1,0 +1,49 @@
+direction: down
+
+login: "POST /login (success)" {
+  shape: oval
+  style.fill: "#dcfce7"
+}
+regen: "session.regenerate()\nsession.forget('url.intended')" {
+  style.fill: "#fef3c7"
+}
+role: "user.role?" {
+  shape: diamond
+}
+admin_dash: "/admin/dashboard" {
+  style.fill: "#dcfce7"
+}
+student_dash: "/student/dashboard" {
+  style.fill: "#dcfce7"
+}
+
+later: "...later: request to a wrong-role URL" {
+  shape: oval
+  style.fill: "#f1f5f9"
+}
+mw: "RoleMiddleware" {
+  style.fill: "#dbe4ff"
+  style.stroke: "#4263eb"
+}
+match: "user.role matches\nroute prefix?" {
+  shape: diamond
+}
+nextc: "next() -> controller" {
+  style.fill: "#dcfce7"
+}
+own: "redirect -> user's own dashboard\n(NOT 403 in foreign layout)" {
+  style.fill: "#fef3c7"
+}
+err403: "policy 403 -> layouts.error\n(no sidebar leak)" {
+  shape: document
+  style.fill: "#fee2e2"
+}
+
+login -> regen -> role
+role -> admin_dash: admin
+role -> student_dash: apprenant
+
+later -> mw -> match
+match -> nextc: yes
+match -> own: no
+nextc -> err403: "policy denies"

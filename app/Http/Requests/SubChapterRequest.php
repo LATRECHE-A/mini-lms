@@ -3,19 +3,37 @@
 /**
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
  *
- * Form request for validating sub-chapter data (create/update).
- * Now includes image, sources, and mermaid diagram fields.
+ * Validates sub-chapter create/update payloads. Authorized via the parent
+ * chapter's formation (FormationPolicy::update) - admins always pass,
+ * students pass for formations they own.
  */
 
 namespace App\Http\Requests;
 
+use App\Models\Chapter;
+use App\Models\SubChapter;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SubChapterRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->isAdmin();
+        $user = $this->user();
+        if (! $user) {
+            return false;
+        }
+
+        $chapter = $this->route('chapter');
+        if ($chapter instanceof Chapter && $chapter->formation) {
+            return $user->can('update', $chapter->formation);
+        }
+
+        $subchapter = $this->route('subchapter');
+        if ($subchapter instanceof SubChapter && $subchapter->chapter?->formation) {
+            return $user->can('update', $subchapter->chapter->formation);
+        }
+
+        return $user->isAdmin();
     }
 
     public function rules(): array
@@ -46,7 +64,7 @@ class SubChapterRequest extends FormRequest
         }
 
         foreach (['image_url', 'image_alt', 'image_credit', 'mermaid_code'] as $field) {
-            if (isset($data[$field]) && trim($data[$field]) === '') {
+            if (isset($data[$field]) && trim((string) $data[$field]) === '') {
                 $data[$field] = null;
             }
         }

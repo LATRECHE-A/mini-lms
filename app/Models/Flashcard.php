@@ -2,10 +2,20 @@
 
 /**
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
+ *
+ * Flashcard with SM-2 spaced-repetition fields.
+ *
+ * - is_template = true  : admin's master copy, distributed (cloned) to
+ *                         students on enrollment. Not used for studying.
+ * - is_template = false : a personal, studyable copy. Both admin and
+ *                         student have these - the admin's are seeded
+ *                         alongside their templates so the admin can test
+ *                         the cards.
  */
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -41,7 +51,6 @@ class Flashcard extends Model
     }
 
     // Accessors
-
     public function getFormationAttribute(): ?Formation
     {
         return $this->subChapter?->chapter?->formation;
@@ -53,36 +62,36 @@ class Flashcard extends Model
     }
 
     // Scopes
-
-    public function scopeTemplates($q)
+    public function scopeTemplates(Builder $q): Builder
     {
         return $q->where('is_template', true);
     }
 
-    public function scopePersonal($q)
+    public function scopePersonal(Builder $q): Builder
     {
         return $q->where('is_template', false);
     }
 
-    public function scopeByUser($q, int $id)
+    public function scopeByUser(Builder $q, int $id): Builder
     {
         return $q->where('user_id', $id);
     }
 
-    public function scopeDueForReview($q, int $userId)
+    public function scopeDueForReview(Builder $q, int $userId): Builder
     {
-        return $q->where('user_id', $userId)->personal()
+        return $q->where('user_id', $userId)
+            ->where('is_template', false)
             ->where(fn ($sub) => $sub->whereNull('next_review_at')->orWhere('next_review_at', '<=', now()))
             ->orderByRaw('next_review_at IS NULL DESC')
             ->orderBy('next_review_at');
     }
 
-    public function scopeForFormation($q, int $formationId)
+    public function scopeForFormation(Builder $q, int $formationId): Builder
     {
         return $q->whereHas('subChapter.chapter', fn ($c) => $c->where('formation_id', $formationId));
     }
 
-    public function scopeForSubChapter($q, int $subChapterId)
+    public function scopeForSubChapter(Builder $q, int $subChapterId): Builder
     {
         return $q->where('sub_chapter_id', $subChapterId);
     }

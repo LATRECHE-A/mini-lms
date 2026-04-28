@@ -3,19 +3,29 @@
 /**
  * @author abdellah.latreche04@gmail.com | Mini LMS | 2026
  *
- * Form request class for validating formation data when creating or updating a formation.
- * Only admins are authorized to make these requests.
+ * Validates formation create/update payloads.
+ *
+ * Authorization is delegated to FormationPolicy so that both admins and
+ * students-who-own-the-formation pass the gate. Routes themselves live in
+ * separate role-prefixed groups; the policy is the single source of truth.
  */
 
 namespace App\Http\Requests;
 
+use App\Models\Formation;
 use Illuminate\Foundation\Http\FormRequest;
 
 class FormationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->isAdmin();
+        $formation = $this->route('formation');
+
+        if ($formation instanceof Formation) {
+            return $this->user()?->can('update', $formation) ?? false;
+        }
+
+        return $this->user()?->can('create', Formation::class) ?? false;
     }
 
     public function rules(): array
